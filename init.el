@@ -9,6 +9,12 @@
 (setenv "EXPECTATIONS_COLORIZE" "false")
 (setenv "EXPECTATIONS_SHOW_RAW" "false")
 
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("(\\(partial2\\)[[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "ρ")
+                               nil))))))
 (defun fb ()
   "format buffer"
   (interactive)
