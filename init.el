@@ -56,11 +56,6 @@
 
 (add-hook 'nrepl-connected-hook 'bury-buffer)
 
-(add-to-list 'load-path "~/.emacs.d/local/twittering-mode/")
-(require 'twittering-mode)
-(setq twittering-use-master-password t)
-
-
 (add-to-list 'load-path "~/.emacs.d/local/expectations-mode/")
 (require 'expectations-mode)
 
