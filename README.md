@@ -20,7 +20,6 @@ This assumes you don't have emacs-live set up at all. Adjust to taste.
     git clone https://github.com/justinweiss/fuzzy-find-in-project.git
     git clone https://github.com/magnars/expand-region.el.git
     git clone https://github.com/gar3thjon3s/expectations-mode.git
-    git clone https://github.com/hayamiz/twittering-mode.git
 
 
 # Orig docs
