@@ -35,7 +35,6 @@
 (global-linum-mode)
 
 (setq-default truncate-lines t)
-(setq-default buffer-for-last-expectations-run nil)
 (setq-default last-run-grep nil)
 (setq-default live-disable-zone t)
 
@@ -135,7 +134,6 @@
           (if (file-exists-p full-path-with-clojure)
               (progn
                 (switch-to-buffer (find-file-noselect full-path-with-clojure))
-                (setq buffer-for-last-expectations-run (current-buffer))
                 (load-current-buffer-to-all-nrepls)
                 (expectations-run-tests)
                 (switch-to-buffer b))
@@ -143,7 +141,6 @@
       (message (concat "no project.clj found at or below " (buffer-file-name))))))
 
 (defun run-expectations-in-buffer (b)
-  (setq buffer-for-last-expectations-run b)
   (expectations-run-tests))
 
 (defun run-expectations-for-file ()
@@ -154,7 +151,6 @@
 
 (global-set-key (kbd "C-c C-,") 'run-expectations-for-file)
 (global-set-key (kbd "C-c ,") 'run-expectations-for-file)
-(global-set-key (kbd "C-c C-M-,") 'rerun-last-run-expectations)
 
 (defun duplicate-line ()
   (interactive)
