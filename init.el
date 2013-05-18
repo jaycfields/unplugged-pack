@@ -98,9 +98,13 @@
 
 (defun run-expectations-for-file ()
   (interactive)
-  (if expectations-mode
-      (expectations-run-tests)
-    (run-expectations-for-source)))
+  (let ((default-connection (nrepl-current-connection-buffer)))
+    (when (get-buffer "*nrepl*<2>")
+      (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*<2>")))
+    (if expectations-mode
+        (expectations-run-tests)
+      (run-expectations-for-source))
+    (nrepl-make-repl-connection-default default-connection)))
 
 (global-set-key (kbd "C-c C-,") 'run-expectations-for-file)
 (global-set-key (kbd "C-c ,") 'run-expectations-for-file)
@@ -172,11 +176,9 @@
 
 (defun expectations-repl (project-root)
   (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
-  (setq nrepl-sessions (delete (get-buffer "*nrepl*<2>") nrepl-sessions))
   (when (get-buffer "*nrepl-connection*<2>")
     (nrepl-close (get-buffer "*nrepl-connection*<2>")))
   (cd project-root)
-  (setq current-project-root project-root)
   (nrepl-jack-in))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
