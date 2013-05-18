@@ -1,13 +1,34 @@
-;; User pack init file
-;;
-;; User this file to initiate the pack configuration.
 ;; See README for more information.
 
-;; Load bindings config
-(live-load-config-file "bindings.el")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; override emacs-live defaults ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setenv "EXPECTATIONS_COLORIZE" "false")
-(setenv "EXPECTATIONS_SHOW_RAW" "false")
+(global-linum-mode) ;;; turn on line numbers
+(global-git-gutter-mode -1) ;;; turn off git gutter, hides line numbers
+(global-auto-revert-mode 1) ;;; allow git pulls/reverts to easily update buffers
+
+(setq-default truncate-lines t) ;;; don't break lines automatically
+(setq-default live-disable-zone t) ;;; this does not work well over ssh
+
+(add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
+
+(dolist (x '(scheme emacs-lisp lisp clojure)) ;;; disable rainbow-delimiters
+  (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
+
+(defun load-current-buffer-to-all-nrepls ()
+  (interactive)
+  (let ((default-connection (nrepl-current-connection-buffer)))
+    (dolist (x nrepl-connection-list)
+      (nrepl-make-repl-connection-default x)
+      (nrepl-load-current-buffer))
+    (nrepl-make-repl-connection-default default-connection)))
+
+(define-key clojure-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; custom clojure font lock ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (eval-after-load 'clojure-mode
   '(font-lock-add-keywords
@@ -23,107 +44,42 @@
                                                (match-end 1) "∘")
                                nil))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; load user specific settings ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun fb ()
-  "format buffer"
-  (interactive)
-  (delete-trailing-whitespace)
-  (indent-region (point-min) (point-max) nil)
-  (untabify (point-min) (point-max)))
-
-(global-git-gutter-mode -1)
-(global-linum-mode)
-
-(setq-default truncate-lines t)
-(setq-default last-run-grep nil)
-(setq-default live-disable-zone t)
-
-(add-to-list 'load-path "~/.emacs.d/local/fuzzy-find-in-project")
-(require 'fuzzy-find-in-project)
-(defalias 'ffip 'fuzzy-find-in-project)
-
-(dolist (x '(scheme emacs-lisp lisp clojure))
-  (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
-
-(add-hook 'eshell-preoutput-filter-functions
-          'ansi-color-filter-apply)
-
-;; TODO - assumes install location for unplugged-pack - should figure out where we are instead
 (let* ((local-user-settings (concat "~/.emacs.d/local/unplugged-pack/" (user-login-name) ".el")))
   (if (and (file-exists-p local-user-settings) (not live-safe-modep))
       (live-load-config-file local-user-settings)))
 
-(defun do-next-step ()
-  (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*"))
-  (bury-buffer))
-
-(add-hook 'nrepl-connected-hook (lambda ()
-                                  (add-to-list 'nrepl-sessions (current-buffer))
-                                  (do-next-step)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; load commonly used modes ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (add-to-list 'load-path "~/.emacs.d/local/expectations-mode/")
 (require 'expectations-mode)
 
-(global-set-key (kbd "C-=") 'er/expand-region)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; define environment vars ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setenv "EXPECTATIONS_COLORIZE" "false")
+(setenv "EXPECTATIONS_SHOW_RAW" "false")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; define keystrokes for commonly used actions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (global-set-key (kbd "C-.") 'er/expand-region)
 (global-set-key (kbd "C-M-.") 'er/contract-region)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; expectations common and enhanced tasks ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun run-expectations ()
   (interactive)
   (shell-command "EXPECTATIONS_COLORIZE=false lein expectations"))
-
-(defun char-at-point ()
-  (interactive)
-  (buffer-substring-no-properties (point) (+ 1 (point))))
-
-(defun clj-string-name (s)
-  (substring s 1 -1))
-
-(defun clj-keyword-name (s)
-  (substring s 1))
-
-(defun delete-and-extract-sexp ()
-  (let* ((begin (point)))
-    (forward-sexp)
-    (let* ((result (buffer-substring-no-properties begin (point))))
-      (delete-region begin (point))
-      result)))
-
-(defun toggle-clj-keyword-string ()
-  (interactive)
-  (save-excursion
-    (if (equal 1 (point))
-        (message "beginning of file reached, this was probably a mistake.")
-      (cond ((equal "\"" (char-at-point)) (insert ":" (clj-string-name (delete-and-extract-sexp))))
-            ((equal ":" (char-at-point)) (insert "\"" (clj-keyword-name (delete-and-extract-sexp)) "\""))
-            (t (progn
-                 (backward-char)
-                 (toggle-clj-keyword-string)))))))
-
-(global-set-key (kbd "C-:") 'toggle-clj-keyword-string)
-
-(defun find-java-src ()
-  (interactive)
-  (er/mark-word)
-  (let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj"))
-         (the-str (buffer-substring-no-properties (region-beginning) (region-end))))
-    (if project-root
-        (progn
-          (grep-string-in the-str
-                          (concat project-root "lib/sources"))
-          (switch-to-grep)
-          (sit-for 0.25)
-          (search-forward (concat (expand-file-name project-root) "lib/sources/"))
-          (compile-goto-error)
-          (let* ((current-point (point)))
-            (search-forward-regexp ".*\.jar")
-            (switch-to-buffer (buffer-substring-no-properties current-point (point))))
-          (search-forward the-str)
-          (archive-extract))
-      (message (concat "no project.clj found at or below " (buffer-file-name))))))
-
-
-(global-set-key (kbd "C-c . j") 'find-java-src)
 
 (defun run-expectations-for-source ()
   (interactive)
@@ -140,30 +96,14 @@
             (message (concat "could not find " full-path-with-clojure))))
       (message (concat "no project.clj found at or below " (buffer-file-name))))))
 
-(defun run-expectations-in-buffer (b)
-  (expectations-run-tests))
-
 (defun run-expectations-for-file ()
   (interactive)
   (if expectations-mode
-      (run-expectations-in-buffer (current-buffer))
+      (expectations-run-tests)
     (run-expectations-for-source)))
 
 (global-set-key (kbd "C-c C-,") 'run-expectations-for-file)
 (global-set-key (kbd "C-c ,") 'run-expectations-for-file)
-
-(defun duplicate-line ()
-  (interactive)
-  (let* ((cursor-column (current-column)))
-    (move-beginning-of-line 1)
-    (kill-line)
-    (yank)
-    (open-line 1)
-    (next-line 1)
-    (yank)
-    (move-to-column cursor-column)))
-
-(global-set-key (kbd "C-c d") 'duplicate-line)
 
 (defun test-full-path (project-root test-home)
   (concat
@@ -230,20 +170,44 @@
 
 (global-set-key (kbd "C-c x") 'toggle-expectations-and-src)
 
-(defun clojure-comment-sexp ()
-  (interactive)
-  (er/mark-clj-word)
-  (paredit-wrap-sexp)
-  (insert "comment ")
-  (fb))
+(defun expectations-repl (project-root)
+  (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
+  (setq nrepl-sessions (delete (get-buffer "*nrepl*<2>") nrepl-sessions))
+  (when (get-buffer "*nrepl-connection*<2>")
+    (nrepl-close (get-buffer "*nrepl-connection*<2>")))
+  (cd project-root)
+  (setq current-project-root project-root)
+  (nrepl-jack-in))
 
-(defun clojure-comment-first-sexp-on-current-line ()
-  (interactive)
-  (move-beginning-of-line 1)
-  (clojure-comment-sexp))
+;;;;;;;;;;;;;;;;;;;;;;;
+;;; java helper fns ;;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "C-;") 'clojure-comment-sexp)
-(global-set-key (kbd "C-M-;") 'clojure-comment-first-sexp-on-current-line)
+(defun find-java-src ()
+  (interactive)
+  (er/mark-word)
+  (let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj"))
+         (the-str (buffer-substring-no-properties (region-beginning) (region-end))))
+    (if project-root
+        (progn
+          (grep-string-in the-str
+                          (concat project-root "lib/sources"))
+          (switch-to-grep)
+          (sit-for 0.25)
+          (search-forward (concat (expand-file-name project-root) "lib/sources/"))
+          (compile-goto-error)
+          (let* ((current-point (point)))
+            (search-forward-regexp ".*\.jar")
+            (switch-to-buffer (buffer-substring-no-properties current-point (point))))
+          (search-forward the-str)
+          (archive-extract))
+      (message (concat "no project.clj found at or below " (buffer-file-name))))))
+
+(global-set-key (kbd "C-c . j") 'find-java-src)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; clojure project fns ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun switch-project (project-root)
   (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
@@ -265,25 +229,6 @@
 
 (global-set-key (kbd "C-c s p") 'switch-project)
 
-(defun expectations-repl (project-root)
-  (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
-  (setq nrepl-sessions (delete (get-buffer "*nrepl*<2>") nrepl-sessions))
-  (when (get-buffer "*nrepl-connection*<2>")
-    (nrepl-close (get-buffer "*nrepl-connection*<2>")))
-  (cd project-root)
-  (setq current-project-root project-root)
-  (nrepl-jack-in))
-
-(defun load-current-buffer-to-all-nrepls ()
-  (interactive)
-  (let ((default-connection (nrepl-current-connection-buffer)))
-    (dolist (x nrepl-connection-list)
-      (nrepl-make-repl-connection-default x)
-      (nrepl-load-current-buffer))
-    (nrepl-make-repl-connection-default default-connection)))
-
-(define-key clojure-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
-
 (defun start-server ()
   (interactive)
   (load-current-buffer-to-all-nrepls)
@@ -291,6 +236,92 @@
   (console-layout))
 
 (global-set-key (kbd "C-c C-x C-e") 'start-server)
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;; layout shortcuts ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun default-window-layout ()
+  (interactive)
+  (let* ((w1 (get-buffer-window (current-buffer)))
+         (w2 (next-window))
+         (b2 (window-buffer w2))
+         (s2 (window-start w2)))
+    (delete-other-windows)
+    (split-window-right)
+    (set-window-buffer (second (window-list)) b2)
+    (set-window-start (second (window-list)) s2)))
+
+(global-set-key (kbd "C-c w l d") 'default-window-layout)
+
+(defun console-layout ()
+  (interactive)
+  (delete-other-windows)
+  (split-window-horizontally)
+  (win-switch-dispatch)
+  (switch-to-buffer "*nrepl-server*")
+  (split-window-vertically)
+  (win-switch-dispatch)
+  (switch-to-buffer "*nrepl*")
+  (win-switch-dispatch))
+
+(global-set-key (kbd "C-c w l c") 'console-layout)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; line manipulation ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun format-buffer ()
+  "format buffer"
+  (interactive)
+  (delete-trailing-whitespace)
+  (indent-region (point-min) (point-max) nil)
+  (untabify (point-min) (point-max)))
+
+(global-set-key (kbd "C-S-f") 'format-buffer)
+
+(defun join-next-line ()
+  (interactive)
+  (next-line)
+  (join-line))
+
+(global-set-key (kbd "C-S-j") 'join-next-line)
+
+(defun duplicate-line ()
+  (interactive)
+  (let* ((cursor-column (current-column)))
+    (move-beginning-of-line 1)
+    (kill-line)
+    (yank)
+    (open-line 1)
+    (next-line 1)
+    (yank)
+    (move-to-column cursor-column)))
+
+(global-set-key (kbd "C-S-d") 'duplicate-line)
+
+(defun clojure-comment-sexp ()
+  (interactive)
+  (er/mark-clj-word)
+  (paredit-wrap-sexp)
+  (insert "comment ")
+  (fb))
+
+(global-set-key (kbd "C-;") 'clojure-comment-sexp)
+
+(defun clojure-comment-first-sexp-on-current-line ()
+  (interactive)
+  (move-beginning-of-line 1)
+  (clojure-comment-sexp))
+
+(global-set-key (kbd "C-M-;") 'clojure-comment-first-sexp-on-current-line)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; grep'ing in a project ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq-default last-run-grep nil)
 
 (defun grep-string-in (s project-root)
   (interactive (list (read-string "string: ")
@@ -327,113 +358,13 @@
   (if last-run-grep
       (grep last-run-grep)))
 
+(defun switch-to-grep ()
+  (interactive)
+  (switch-to-buffer-other-window "*grep*"))
+
 (global-set-key (kbd "C-c g p") 'grep-in-project)
 (global-set-key (kbd "C-c g i") 'grep-in)
 (global-set-key (kbd "C-c g s p") 'grep-string-in-project)
 (global-set-key (kbd "C-c g s i") 'grep-string-in)
 (global-set-key (kbd "C-c M-g") 'rerun-last-grep)
-
-(defun default-window-layout ()
-  (interactive)
-  (let* ((w1 (get-buffer-window (current-buffer)))
-         (w2 (next-window))
-         (b2 (window-buffer w2))
-         (s2 (window-start w2)))
-    (delete-other-windows)
-    (split-window-right)
-    (set-window-buffer (second (window-list)) b2)
-    (set-window-start (second (window-list)) s2)))
-
-(global-set-key (kbd "C-c w l d") 'default-window-layout)
-
-(defun console-layout ()
-  (interactive)
-  (delete-other-windows)
-  (split-window-horizontally)
-  (win-switch-dispatch)
-  (switch-to-buffer "*nrepl-server*")
-  (split-window-vertically)
-  (win-switch-dispatch)
-  (switch-to-buffer "*nrepl*")
-  (win-switch-dispatch))
-
-(global-set-key (kbd "C-c w l c") 'console-layout)
-
-(defun clear-nrepl-server-output ()
-  (interactive)
-  (save-window-excursion
-    (switch-to-buffer "*nrepl-server*")
-    (mark-whole-buffer)
-    (delete-region (region-beginning) (region-end))))
-
-(global-set-key (kbd "C-c w c n s") 'clear-nrepl-server-output)
-
-(global-auto-revert-mode 1)
-
-(defun switch-to-grep ()
-  (interactive)
-  (switch-to-buffer-other-window "*grep*"))
-
-(defun switch-to-shell ()
-  (interactive)
-  (if (get-buffer "*eshell*")
-      (switch-to-buffer-other-window "*eshell*")
-    (eshell)))
-
-(defun switch-to-repl ()
-  (interactive)
-  (switch-to-buffer-other-window "*nrepl*"))
-
-(global-set-key (kbd "C-c s s") 'switch-to-shell)
 (global-set-key (kbd "C-c s g") 'switch-to-grep)
-(global-set-key (kbd "C-c s r") 'switch-to-repl)
-
-(defun join-next-line ()
-  (interactive)
-  (next-line)
-  (join-line))
-
-(global-set-key (kbd "C-S-j") 'join-next-line)
-
-(defun create-clj-function ()
-  (interactive)
-  (when (not (region-active-p))
-    (er/mark-clj-word))
-  (copy-region-as-kill (region-beginning) (region-end))
-  (live-paredit-previous-top-level-form)
-  (insert "(defn ")
-  (yank)
-  (insert " [")
-  (save-excursion
-    (insert "])\n\n")))
-
-(global-set-key (kbd "C-c r c f") 'create-clj-function)
-
-(defun extract-let (var-name)
-  (interactive "Mvar name: ")
-  (when (not (region-active-p))
-    (er/mark-outside-pairs))
-  (kill-region (region-beginning) (region-end))
-  (insert var-name)
-  (er/mark-outside-pairs)
-  (paredit-wrap-sexp)
-  (insert "let [" var-name " ")
-  (yank)
-  (insert "]")
-  (reindent-then-newline-and-indent))
-
-(global-set-key (kbd "C-c r e l") 'extract-let)
-
-(defun inline-let-var ()
-  (interactive)
-  (when (not (region-active-p))
-    (er/mark-clj-word))
-  (let* ((var-name (buffer-substring-no-properties (region-beginning) (region-end))))
-    (forward-sexp)
-    (er/mark-outside-pairs)
-    (let* ((var-form (buffer-substring-no-properties (region-beginning) (region-end))))
-      (kill-region (region-beginning) (region-end))
-      (live-paredit-backward-kill-sexp)
-      (er/mark-outside-pairs)
-      (er/mark-outside-pairs)
-      (query-replace var-name var-form))))
