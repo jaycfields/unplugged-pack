@@ -190,8 +190,7 @@
          (the-str (buffer-substring-no-properties (region-beginning) (region-end))))
     (if project-root
         (progn
-          (grep-string-in the-str
-                          (concat project-root "lib/sources"))
+          (grep-string-in the-str (concat project-root "lib/sources"))
           (switch-to-grep)
           (sit-for 0.25)
           (search-forward (concat (expand-file-name project-root) "lib/sources/"))
