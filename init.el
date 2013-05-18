@@ -146,19 +146,6 @@
   (setq buffer-for-last-expectations-run b)
   (expectations-run-tests))
 
-(defalias 'll "ls -l $*")
-
-(defun rerun-last-run-expectations ()
-  (interactive)
-  (let* ((b (current-buffer)))
-          (if buffer-for-last-expectations-run
-              (progn
-                (switch-to-buffer buffer-for-last-expectations-run)
-                (nrepl-load-current-buffer)
-                (expectations-run-tests)
-                (switch-to-buffer b))
-            (message (concat "could not find a previous test run")))))
-
 (defun run-expectations-for-file ()
   (interactive)
   (if expectations-mode
