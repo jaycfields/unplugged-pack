@@ -54,7 +54,13 @@
   (if (and (file-exists-p local-user-settings) (not live-safe-modep))
       (live-load-config-file local-user-settings)))
 
-(add-hook 'nrepl-connected-hook 'bury-buffer)
+(defun do-next-step ()
+  (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*"))
+  (bury-buffer))
+
+(add-hook 'nrepl-connected-hook (lambda ()
+                                  (add-to-list 'nrepl-sessions (current-buffer))
+                                  (do-next-step)))
 
 (add-to-list 'load-path "~/.emacs.d/local/expectations-mode/")
 (require 'expectations-mode)
@@ -130,7 +136,7 @@
               (progn
                 (switch-to-buffer (find-file-noselect full-path-with-clojure))
                 (setq buffer-for-last-expectations-run (current-buffer))
-                (nrepl-load-current-buffer)
+                (load-current-buffer-to-all-nrepls)
                 (expectations-run-tests)
                 (switch-to-buffer b))
             (message (concat "could not find " full-path-with-clojure))))
@@ -276,9 +282,28 @@
 
 (global-set-key (kbd "C-c s p") 'switch-project)
 
+(defun expectations-repl (project-root)
+  (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
+  (setq nrepl-sessions (delete (get-buffer "*nrepl*<2>") nrepl-sessions))
+  (when (get-buffer "*nrepl-connection*<2>")
+    (nrepl-close (get-buffer "*nrepl-connection*<2>")))
+  (cd project-root)
+  (setq current-project-root project-root)
+  (nrepl-jack-in))
+
+(defun load-current-buffer-to-all-nrepls ()
+  (interactive)
+  (let ((default-connection (nrepl-current-connection-buffer)))
+    (dolist (x nrepl-connection-list)
+      (nrepl-make-repl-connection-default x)
+      (nrepl-load-current-buffer))
+    (nrepl-make-repl-connection-default default-connection)))
+
+(define-key clojure-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
+
 (defun start-server ()
   (interactive)
-  (nrepl-load-current-buffer)
+  (load-current-buffer-to-all-nrepls)
   (nrepl-interactive-eval (nrepl-last-expression))
   (console-layout))
 
