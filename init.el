@@ -76,7 +76,7 @@
   '(font-lock-add-keywords
     'clojure-mode `(("(\\(partial\\)[[:space:]]"
                      (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "Ƥ")
+                                               (match-end 1) "∂")
                                nil))))))
 
 (eval-after-load 'clojure-mode
