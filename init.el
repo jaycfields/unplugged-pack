@@ -12,23 +12,26 @@
 (setq-default live-disable-zone t) ;;; this does not work well over ssh
 
 (add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
-(add-hook 'nrepl-connected-hook
-          (lambda () ;;; always make the first connection the default connection
-            (when (get-buffer "*nrepl-connection*")
-              (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*")))))
+(add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
 
 (dolist (x '(scheme emacs-lisp lisp clojure)) ;;; disable rainbow-delimiters
   (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
+
+(defun reset-nrepl-connection-to-default ()
+  (if (get-buffer "*nrepl-connection*")
+      (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*"))
+    (message "*** PROBABLE ERROR *** *nrepl-connection* could not be found")))
 
 (defun load-current-buffer-to-all-nrepls ()
   (interactive)
   (let ((default-connection (nrepl-current-connection-buffer)))
     (dolist (x nrepl-connection-list)
-      (nrepl-make-repl-connection-default x)
+      (nrepl-make-repl-connection-default (get-buffer x))
+      (message (concat "loading buffer to " x))
       (nrepl-load-current-buffer))
     (nrepl-make-repl-connection-default default-connection)))
 
-(define-key clojure-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
+(define-key nrepl-interaction-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; things in emacs-live that are in dev, but not prod ;;;
@@ -137,13 +140,12 @@
 
 (defun run-expectations-for-file ()
   (interactive)
-  (let ((default-connection (nrepl-current-connection-buffer)))
-    (when (get-buffer "*nrepl-connection*<2>")
-      (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*<2>")))
-    (if expectations-mode
-        (expectations-run-tests)
-      (run-expectations-for-source))
-    (nrepl-make-repl-connection-default default-connection)))
+  (when (get-buffer "*nrepl-connection*<2>")
+    (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*<2>")))
+  (if expectations-mode
+      (expectations-run-tests)
+    (run-expectations-for-source))
+  (reset-nrepl-connection-to-default))
 
 (define-key clojure-mode-map (kbd "C-c C-,") 'run-expectations-for-file)
 (define-key clojure-mode-map (kbd "C-c ,") 'run-expectations-for-file)
