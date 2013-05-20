@@ -12,6 +12,10 @@
 (setq-default live-disable-zone t) ;;; this does not work well over ssh
 
 (add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
+(add-hook 'nrepl-connected-hook
+          (lambda () ;;; always make the first connection the default connection
+            (when (get-buffer "*nrepl-connection*")
+              (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*")))))
 
 (dolist (x '(scheme emacs-lisp lisp clojure)) ;;; disable rainbow-delimiters
   (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
@@ -134,15 +138,17 @@
 (defun run-expectations-for-file ()
   (interactive)
   (let ((default-connection (nrepl-current-connection-buffer)))
-    (when (get-buffer "*nrepl*<2>")
+    (when (get-buffer "*nrepl-connection*<2>")
       (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*<2>")))
     (if expectations-mode
         (expectations-run-tests)
       (run-expectations-for-source))
     (nrepl-make-repl-connection-default default-connection)))
 
-(global-set-key (kbd "C-c C-,") 'run-expectations-for-file)
-(global-set-key (kbd "C-c ,") 'run-expectations-for-file)
+(define-key clojure-mode-map (kbd "C-c C-,") 'run-expectations-for-file)
+(define-key clojure-mode-map (kbd "C-c ,") 'run-expectations-for-file)
+(define-key expectations-mode-map (kbd "C-c C-,") 'run-expectations-for-file)
+(define-key expectations-mode-map (kbd "C-c ,") 'run-expectations-for-file)
 
 (defun test-full-path (project-root test-home)
   (concat
@@ -250,7 +256,8 @@
   (let ((project-name (file-name-nondirectory (directory-file-name project-root))))
     (switch-to-buffer "*nrepl-server*")
     (set-buffer-modified-p nil)
-    (nrepl-quit)
+    (when (get-buffer "*nrepl-connection*")
+      (nrepl-close (get-buffer "*nrepl-connection*")))
     (when (equal current-prefix-arg nil)
       (mapc 'kill-buffer (buffer-list)))
     (cd project-root)
