@@ -6,7 +6,6 @@ Shared emacs-live settings from David Chelimsky, John Hume, and Jay Fields
 
 This assumes you don't have emacs-live set up at all. Adjust to taste.
 
-    gem install fuzzy_file_finder
     cd # to home dir
     mv .emacs-live.el .emacs-live.el.bak # for safe keeping if you have it already
     mv .emacs.d       .emacs.d.bak       # for safe keeping if you have it already
