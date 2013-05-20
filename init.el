@@ -26,6 +26,41 @@
 
 (define-key clojure-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; things in emacs-live that are in dev, but not prod ;;;
+;;; can be deleted when promoted to prod emacs-live    ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; if in ~/.emacs.d/packs/live/foundation-pack/config/util-fns.el, delete
+(defun live-delete-and-extract-sexp ()
+  "Delete the sexp and return it."
+  (interactive)
+  (let* ((begin (point)))
+    (forward-sexp)
+    (let* ((result (buffer-substring-no-properties begin (point))))
+      (delete-region begin (point))
+      result)))
+
+;;; if in ~/.emacs.d/packs/live/clojure-pack/config/clojure-conf.el, delete
+(defun live-toggle-clj-keyword-string ()
+  "convert the string or keyword at (point) from string->keyword or keyword->string."
+  (interactive)
+  (let* ((original-point (point)))
+    (while (and (> (point) 1)
+                (not (equal "\"" (buffer-substring-no-properties (point) (+ 1 (point)))))
+                (not (equal ":" (buffer-substring-no-properties (point) (+ 1 (point))))))
+      (backward-char))
+    (cond
+     ((equal 1 (point))
+      (message "beginning of file reached, this was probably a mistake."))
+     ((equal "\"" (buffer-substring-no-properties (point) (+ 1 (point))))
+      (insert ":" (substring (live-delete-and-extract-sexp) 1 -1)))
+     ((equal ":" (buffer-substring-no-properties (point) (+ 1 (point))))
+      (insert "\"" (substring (live-delete-and-extract-sexp) 1) "\"")))
+    (goto-char original-point)))
+
+(define-key clojure-mode-map (kbd "C-:") 'live-toggle-clj-keyword-string)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; custom clojure font lock ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
