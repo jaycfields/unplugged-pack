@@ -133,6 +133,11 @@
   (save-some-buffers nil (lambda () (equal major-mode 'clojure-mode)))
   (save-window-excursion
     (save-excursion
+      (when (clojure-find-ns)
+        (goto-char (match-beginning 0))
+        (nrepl-eval (nrepl-expression-at-point)))))
+  (save-window-excursion
+    (save-excursion
       (save-restriction
         (live-paredit-previous-top-level-form)
         (let (pos1 pos2)
@@ -141,7 +146,6 @@
           (setq pos2 (point))
           (cua-set-mark)
           (narrow-to-region pos1 pos2)
-          (message "running %s" (buffer-string))
           (expectations-run-tests t))))))
 
 (defun run-expectations-for-source ()
