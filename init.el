@@ -7,6 +7,7 @@
 (global-linum-mode) ;;; turn on line numbers
 (global-git-gutter-mode -1) ;;; turn off git gutter, hides line numbers
 (global-auto-revert-mode 1) ;;; allow git pulls/reverts to easily update buffers
+(put 'narrow-to-region 'disabled nil) ;; allow me to narrow-to-region
 
 (setq-default truncate-lines t) ;;; don't break lines automatically
 (setq-default live-disable-zone t) ;;; this does not work well over ssh
@@ -123,6 +124,26 @@
   (interactive)
   (shell-command "EXPECTATIONS_COLORIZE=false lein expectations"))
 
+(defun expectations-run-tests-synch ()
+  (interactive)
+  (expectations-run-tests t))
+
+(defun run-isolated-expectation ()
+  (interactive)
+  (save-some-buffers nil (lambda () (equal major-mode 'clojure-mode)))
+  (save-window-excursion
+    (save-excursion
+      (save-restriction
+        (live-paredit-previous-top-level-form)
+        (let (pos1 pos2)
+          (setq pos1 (point))
+          (end-of-sexp)
+          (setq pos2 (point))
+          (cua-set-mark)
+          (narrow-to-region pos1 pos2)
+          (message "running %s" (buffer-string))
+          (expectations-run-tests t))))))
+
 (defun run-expectations-for-source ()
   (interactive)
   (let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj")))
@@ -138,12 +159,14 @@
             (message (concat "could not find " full-path-with-clojure))))
       (message (concat "no project.clj found at or below " (buffer-file-name))))))
 
-(defun run-expectations-for-file ()
-  (interactive)
+(defun run-expectations-for-file (&optional prefix)
+  (interactive "P")
   (when (get-buffer "*nrepl-connection*<2>")
     (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*<2>")))
   (if expectations-mode
-      (expectations-run-tests)
+      (if prefix
+          (run-isolated-expectation)
+        (expectations-run-tests))
     (run-expectations-for-source))
   (reset-nrepl-connection-to-default))
 
