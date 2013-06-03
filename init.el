@@ -69,20 +69,58 @@
 
 (define-key clojure-mode-map (kbd "C-:") 'live-toggle-clj-keyword-string)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; custom clojure font lock ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; custom clojure font lock and key chording ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; possible future additions
+
+;; clojure.core
+;;     117 assoc                 a greek?
+;;     214 with-redefs           a greek?
+
+;; trading.domain.stuff
+;;     114 ask
+;;     143 :instrument                 118 instrument
+;;     167 :side                       122 side
+;;     200 bid
+;;     204 instrument-id               269 :instrument-id
+;;     272 :product                    134 product
+;;     364 :size                       122 size
+;;     383 :px                         177 px
+
+;; testing
+;;     598 expect
+
+;;; key chords
+(key-chord-define clojure-mode-map "kl"  "->")
+(key-chord-define clojure-mode-map "kk"  ":keys")
+
+;; clojure.core
+;;     141 false                 greek: ⊥ - http://en.wikipedia.org/wiki/Tautology_(logic)
+;;     217 true                  greek: ⊤ - http://en.wikipedia.org/wiki/Tautology_(logic)
+;;     255 nil                   greek: ∅ - http://en.wikipedia.org/wiki/Null_(mathematics)
+;;     316 :keys                 greek: ӄ
+
+;; testing
+;;     224 interaction           greek: ι
+;;     265 no-op                 greek: ⒩
+;;         a-fn                  greek: ⒡
+;;         a-fn1                 greek: ⑴
+;;         a-fn2                 greek: ⑵
+;;         a-fn3                 greek: ⑶
+
 
 (eval-after-load 'clojure-mode
   '(font-lock-add-keywords
-    'clojure-mode `(("(\\(partial\\)[[:space:]]"
+    'clojure-mode `(("[([:space:]]\\(partial\\)[[:space:]]"
                      (0 (progn (compose-region (match-beginning 1)
                                                (match-end 1) "∂")
                                nil))))))
 
 (eval-after-load 'clojure-mode
   '(font-lock-add-keywords
-    'clojure-mode `(("(\\(comp\\)[[:space:]]"
+    'clojure-mode `(("[([:space:]]\\(comp\\)[[:space:]]"
                      (0 (progn (compose-region (match-beginning 1)
                                                (match-end 1) "∘")
                                nil))))))
@@ -283,13 +321,12 @@
 (defun switch-project (project-root)
   (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
   (let ((project-name (file-name-nondirectory (directory-file-name project-root))))
-    (switch-to-buffer "*nrepl-server*")
-    (set-buffer-modified-p nil)
     (when (get-buffer "*nrepl-connection*")
+      (switch-to-buffer "*nrepl-server*")
+      (set-buffer-modified-p nil)
       (nrepl-close (get-buffer "*nrepl-connection*")))
     (when (equal current-prefix-arg nil)
       (mapc 'kill-buffer (buffer-list)))
-    (cd project-root)
     (message (concat "project root: " project-root))
     (nrepl-jack-in)
     (switch-to-buffer "*nrepl-server*")
