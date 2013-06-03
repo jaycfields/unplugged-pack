@@ -96,20 +96,72 @@
 (key-chord-define clojure-mode-map "kl"  "->")
 (key-chord-define clojure-mode-map "kk"  ":keys")
 
-;; clojure.core
-;;     141 false                 greek: ⊥ - http://en.wikipedia.org/wiki/Tautology_(logic)
-;;     217 true                  greek: ⊤ - http://en.wikipedia.org/wiki/Tautology_(logic)
-;;     255 nil                   greek: ∅ - http://en.wikipedia.org/wiki/Null_(mathematics)
-;;     316 :keys                 greek: ӄ
+;;; font-lock
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "⒡")
+                               nil))))))
 
-;; testing
-;;     224 interaction           greek: ι
-;;     265 no-op                 greek: ⒩
-;;         a-fn                  greek: ⒡
-;;         a-fn1                 greek: ⑴
-;;         a-fn2                 greek: ⑵
-;;         a-fn3                 greek: ⑶
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn1\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "⑴")
+                               nil))))))
 
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn2\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "⑵")
+                               nil))))))
+
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn3\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "⑶")
+                               nil))))))
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(no-op\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "⒩")
+                               nil))))))
+
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(interaction\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "ι")
+                               nil))))))
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(:keys\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "ӄ")
+                               nil))))))
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(nil\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "∅")
+                               nil))))))
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(true\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "ⓣ")
+                               nil))))))
+
+(eval-after-load 'clojure-mode
+  '(font-lock-add-keywords
+    'clojure-mode `(("[\[(\{[:space:]]\\(false\\)[\])\}[:space:]]"
+                     (0 (progn (compose-region (match-beginning 1)
+                                               (match-end 1) "ⓕ")
+                               nil))))))
 
 (eval-after-load 'clojure-mode
   '(font-lock-add-keywords
