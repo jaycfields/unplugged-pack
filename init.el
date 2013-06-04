@@ -97,13 +97,22 @@
 (key-chord-define clojure-mode-map "kk"  ":keys")
 
 ;;; font-lock
+
+
+
+
+
 (dolist (x '((true        т)
              (false       ғ)
-             (interaction ι)
              (:keys       ӄ)
              (nil         Ø)
              (partial     ∂)
-             (comp        º)))
+             (comp        º)
+             (interaction ι)
+             (a-fn1       α)
+             (a-fn2       β)
+             (a-fn3       γ)
+             (no-op       ε)))
   (eval-after-load 'clojure-mode
     '(font-lock-add-keywords
       'clojure-mode `((,(concat "[\[({[:space:]]"
