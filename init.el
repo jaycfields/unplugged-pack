@@ -210,6 +210,16 @@
 ;;; expectations common and enhanced tasks ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(define-clojure-indent
+  (expect 'defun)
+  (expect-let 'defun)
+  (given 'defun)
+  (context 1)
+  (freeze-time 1)
+  (redef-state 1)
+  (from-each 1))
+
 (defun run-expectations ()
   (interactive)
   (shell-command "EXPECTATIONS_COLORIZE=false lein expectations"))
