@@ -97,85 +97,37 @@
 (key-chord-define clojure-mode-map "kk"  ":keys")
 
 ;;; font-lock
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "⒡")
-                               nil))))))
-
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn1\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "⑴")
-                               nil))))))
-
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn2\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "⑵")
-                               nil))))))
-
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(a-fn3\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "⑶")
-                               nil))))))
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(no-op\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "⒩")
-                               nil))))))
-
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(interaction\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "ι")
-                               nil))))))
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(:keys\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "ӄ")
-                               nil))))))
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(nil\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "∅")
-                               nil))))))
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(true\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "ⓣ")
-                               nil))))))
-
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[\[(\{[:space:]]\\(false\\)[\])\}[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "ⓕ")
-                               nil))))))
-
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[([:space:]]\\(partial\\)[[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "∂")
-                               nil))))))
-
-(eval-after-load 'clojure-mode
-  '(font-lock-add-keywords
-    'clojure-mode `(("[([:space:]]\\(comp\\)[[:space:]]"
-                     (0 (progn (compose-region (match-beginning 1)
-                                               (match-end 1) "∘")
-                               nil))))))
+(dolist (x '((true        т)
+             (false       ғ)
+             (interaction ι)
+             (:keys       ӄ)
+             (nil         Ø)
+             (partial     ∂)
+             (comp        º)))
+  (eval-after-load 'clojure-mode
+    '(font-lock-add-keywords
+      'clojure-mode `((,(concat "[\[({[:space:]]"
+                                "\\(" (symbol-name (first x)) "\\)"
+                                "[\])}[:space:]]")
+                       (0 (progn (compose-region (match-beginning 1)
+                                                 (match-end 1) ,(symbol-name (second x)))
+                                 nil))))))
+  (eval-after-load 'clojure-mode
+    '(font-lock-add-keywords
+      'clojure-mode `((,(concat "^"
+                                "\\(" (symbol-name (first x)) "\\)"
+                                "[\])}[:space:]]")
+                       (0 (progn (compose-region (match-beginning 1)
+                                                 (match-end 1) ,(symbol-name (second x)))
+                                 nil))))))
+  (eval-after-load 'clojure-mode
+    '(font-lock-add-keywords
+      'clojure-mode `((,(concat "[\[({[:space:]]"
+                                "\\(" (symbol-name (first x)) "\\)"
+                                "$")
+                       (0 (progn (compose-region (match-beginning 1)
+                                                 (match-end 1) ,(symbol-name (second x)))
+                                 nil)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; load user specific settings ;;;
