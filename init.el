@@ -351,6 +351,7 @@
     (when (equal current-prefix-arg nil)
       (mapc 'kill-buffer (buffer-list)))
     (message (concat "project root: " project-root))
+    (cd project-root)
     (nrepl-jack-in)
     (switch-to-buffer "*nrepl-server*")
     (clojure-mode)
