@@ -15,6 +15,14 @@
 (add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
 
+;; Develop in unplugged-pack snippets dir
+;; use snippets from emacs-live
+(setq yas/root-directory '("~/.emacs.d/local/unplugged-pack/snippets"
+                           "~/.emacs.d/etc/snippets"))
+
+;; Map `yas/load-directory' to every element
+(mapc 'yas/load-directory yas/root-directory)
+
 (dolist (x '(scheme emacs-lisp lisp clojure)) ;;; disable rainbow-delimiters
   (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
 

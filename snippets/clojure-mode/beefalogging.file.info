@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: beefalogging.file/info
+# key: bf/i
+# --
+(beefalogging.file/info $0)
