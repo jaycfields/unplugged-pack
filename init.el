@@ -115,6 +115,7 @@
              (:keys       ӄ)
              (nil         Ø)
              (partial     ∂)
+             (with-redefs я)
              (comp        º)
              (interaction ι)
              (a-fn1       α)
