@@ -315,7 +315,7 @@
 (global-set-key (kbd "C-c x") 'toggle-expectations-and-src)
 
 (defun expectations-repl (project-root)
-  (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
+  (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
   (when (get-buffer "*nrepl-connection*<2>")
     (nrepl-close (get-buffer "*nrepl-connection*<2>")))
   (cd project-root)
@@ -351,7 +351,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun switch-project (project-root)
-  (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
+  (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
   (let ((project-name (file-name-nondirectory (directory-file-name project-root))))
     (when (get-buffer "*nrepl-connection*")
       (switch-to-buffer "*nrepl-server*")
@@ -469,7 +469,7 @@
 
 (defun grep-string-in (s project-root)
   (interactive (list (read-string "string: ")
-                     (read-directory-name
+                     (ido-read-directory-name
                       "Project Root: "
                       (locate-dominating-file default-directory "project.clj"))))
   (message (concat s project-root))
@@ -485,7 +485,7 @@
       (message (concat "no project.clj found at or below " (buffer-file-name))))))
 
 (defun grep-in (project-root)
-  (interactive (list (read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
+  (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
   (er/mark-clj-word)
   (grep-string-in (buffer-substring-no-properties (region-beginning) (region-end)) project-root))
 
