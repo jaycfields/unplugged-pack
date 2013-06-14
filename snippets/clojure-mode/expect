@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: expect
+# key: e
+# --
+(expect $0)

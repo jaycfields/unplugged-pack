@@ -77,6 +77,28 @@
 
 (define-key clojure-mode-map (kbd "C-:") 'live-toggle-clj-keyword-string)
 
+(defun live-toggle-clj-coll ()
+  "convert the coll at (point) from (x) -> {x} -> [x] -> (x) recur"
+  (interactive)
+  (let* ((original-point (point)))
+    (while (and (> (point) 1)
+                (not (equal "(" (buffer-substring-no-properties (point) (+ 1 (point)))))
+                (not (equal "{" (buffer-substring-no-properties (point) (+ 1 (point)))))
+                (not (equal "[" (buffer-substring-no-properties (point) (+ 1 (point))))))
+      (backward-char))
+    (cond
+     ((equal "(" (buffer-substring-no-properties (point) (+ 1 (point))))
+      (insert "{" (substring (live-delete-and-extract-sexp) 1 -1) "}"))
+     ((equal "{" (buffer-substring-no-properties (point) (+ 1 (point))))
+      (insert "[" (substring (live-delete-and-extract-sexp) 1 -1) "]"))
+     ((equal "[" (buffer-substring-no-properties (point) (+ 1 (point))))
+      (insert "(" (substring (live-delete-and-extract-sexp) 1 -1) ")"))
+     ((equal 1 (point))
+      (message "beginning of file reached, this was probably a mistake.")))
+    (goto-char original-point)))
+
+(define-key clojure-mode-map (kbd "C->") 'live-toggle-clj-coll)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; custom clojure font lock and key chording ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -103,12 +125,16 @@
 ;;; key chords
 (key-chord-define clojure-mode-map "kl"  "->")
 (key-chord-define clojure-mode-map "kk"  ":keys")
+(key-chord-define clojure-mode-map "kp"  "publish-fn")
+(key-chord-define clojure-mode-map "PP"  "product")
+(key-chord-define clojure-mode-map "SS"  "size")
+(key-chord-define clojure-mode-map "Ss"  "side")
+(key-chord-define clojure-mode-map "II"  "instrument-id")
+(key-chord-define clojure-mode-map "Ii"  "instrument")
+(key-chord-define clojure-mode-map "BB"  "bid")
+(key-chord-define clojure-mode-map "AA"  "ask")
 
 ;;; font-lock
-
-
-
-
 
 (dolist (x '((true        т)
              (false       ғ)
