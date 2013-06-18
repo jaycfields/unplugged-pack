@@ -444,9 +444,15 @@
 (defun format-buffer ()
   "format buffer"
   (interactive)
-  (delete-trailing-whitespace)
-  (indent-region (point-min) (point-max) nil)
-  (untabify (point-min) (point-max)))
+  (save-excursion
+    (save-restriction
+      (narrow-to-region (window-start) (window-end))
+      (beginning-of-buffer)
+      (forward-paragraph)
+      (narrow-to-region (point) (point-max))
+      (delete-trailing-whitespace)
+      (indent-region (point-min) (point-max) nil)
+      (untabify (point-min) (point-max)))))
 
 (global-set-key (kbd "C-S-f") 'format-buffer)
 
