@@ -123,8 +123,8 @@
 ;;     598 expect
 
 ;;; key chords
-(key-chord-define clojure-mode-map "kl"  "->")
-(key-chord-define clojure-mode-map "kk"  ":keys")
+(key-chord-define clojure-mode-map "kl"  "-> ")
+(key-chord-define clojure-mode-map "kk"  ":keys [")
 (key-chord-define clojure-mode-map "kp"  "publish-fn")
 (key-chord-define clojure-mode-map "PP"  "product")
 (key-chord-define clojure-mode-map "SS"  "size")
