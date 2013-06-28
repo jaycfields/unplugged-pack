@@ -134,6 +134,13 @@
 (key-chord-define clojure-mode-map "BB"  "bid")
 (key-chord-define clojure-mode-map "AA"  "ask")
 
+(key-chord-define clojure-mode-map "tj"  "a-fn1")
+(key-chord-define clojure-mode-map "tk"  "a-fn2")
+(key-chord-define clojure-mode-map "ti"  "interaction")
+
+
+
+
 ;;; font-lock
 
 (dolist (x '((true        т)
