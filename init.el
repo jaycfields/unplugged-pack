@@ -134,12 +134,10 @@
 (key-chord-define clojure-mode-map "BB"  "bid")
 (key-chord-define clojure-mode-map "AA"  "ask")
 
-(key-chord-define clojure-mode-map "tj"  "a-fn1")
-(key-chord-define clojure-mode-map "tk"  "a-fn2")
-(key-chord-define clojure-mode-map "ti"  "interaction")
-
-
-
+(key-chord-define clojure-mode-map "ZJ"  "a-fn1")
+(key-chord-define clojure-mode-map "ZK"  "a-fn2")
+(key-chord-define clojure-mode-map "ZL"  "a-fn3")
+(key-chord-define clojure-mode-map "ZI"  "interaction")
 
 ;;; font-lock
 
