@@ -133,6 +133,7 @@
 (key-chord-define clojure-mode-map "Ii"  "instrument")
 (key-chord-define clojure-mode-map "BB"  "bid")
 (key-chord-define clojure-mode-map "AA"  "ask")
+(key-chord-define clojure-mode-map "TT"  "term")
 
 (key-chord-define clojure-mode-map "ZJ"  "a-fn1")
 (key-chord-define clojure-mode-map "ZK"  "a-fn2")
