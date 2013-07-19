@@ -500,6 +500,17 @@
 
 (global-set-key (kbd "C-M-;") 'clojure-comment-first-sexp-on-current-line)
 
+(defun remove-commas ()
+  (interactive)
+  (save-excursion
+    (let (pos1 pos2)
+      (if (region-active-p)
+          (progn
+            (setq pos1 (region-beginning) pos2 (region-end))
+            (replace-string "," "" nil pos1 pos2))
+        (replace-string "," "" nil (point-min) (point-max))))))
+
+(global-set-key (kbd "C-S-k") 'remove-commas)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; grep'ing in a project ;;;
@@ -526,15 +537,17 @@
 
 (defun grep-in (project-root)
   (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
-  (er/mark-clj-word)
-  (grep-string-in (buffer-substring-no-properties (region-beginning) (region-end)) project-root))
+  (let (pos1 pos2 bds)
+    (if (not (region-active-p))
+        (er/mark-clj-word))
+    (setq pos1 (region-beginning) pos2 (region-end))
+    (grep-string-in (buffer-substring-no-properties pos1 pos2) project-root)))
 
 (defun grep-in-project ()
   (interactive)
-  (er/mark-clj-word)
   (let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj")))
     (if project-root
-        (grep-string-in (buffer-substring-no-properties (region-beginning) (region-end)) project-root)
+        (grep-in project-root)
       (message (concat "no project.clj found at or below " (buffer-file-name))))))
 
 (defun rerun-last-grep ()
