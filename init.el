@@ -103,25 +103,6 @@
 ;;; custom clojure font lock and key chording ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; possible future additions
-
-;; clojure.core
-;;     117 assoc                 a greek?
-;;     214 with-redefs           a greek?
-
-;; trading.domain.stuff
-;;     114 ask
-;;     143 :instrument                 118 instrument
-;;     167 :side                       122 side
-;;     200 bid
-;;     204 instrument-id               269 :instrument-id
-;;     272 :product                    134 product
-;;     364 :size                       122 size
-;;     383 :px                         177 px
-
-;; testing
-;;     598 expect
-
 ;;; key chords
 (key-chord-define clojure-mode-map "kl"  "-> ")
 (key-chord-define clojure-mode-map "kk"  "{:keys [")
@@ -143,7 +124,6 @@
 
 
 ;;; font-lock
-
 (dolist (x '((true        т)
              (false       ғ)
              (:keys       ӄ)
@@ -151,6 +131,7 @@
              (partial     ∂)
              (with-redefs я)
              (comp        º)
+             (apply       ζ)
              (interaction ι)
              (a-fn1       α)
              (a-fn2       β)
