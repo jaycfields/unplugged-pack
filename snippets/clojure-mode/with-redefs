@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: with-redefs
-# key: wr
+# key: w-r
 # --
-(with-redefs [$0]
-  $1)
+(with-redefs [$1]
+  $0)
