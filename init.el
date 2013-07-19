@@ -139,6 +139,8 @@
 (key-chord-define clojure-mode-map "ZK"  "a-fn2")
 (key-chord-define clojure-mode-map "ZL"  "a-fn3")
 (key-chord-define clojure-mode-map "ZI"  "interaction")
+(key-chord-define clojure-mode-map "ZN"  "no-op")
+
 
 ;;; font-lock
 
