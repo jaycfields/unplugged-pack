@@ -104,9 +104,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; key chords
-(key-chord-define clojure-mode-map "kl"  "-> ")
-(key-chord-define clojure-mode-map "kk"  "{:keys [")
-(key-chord-define clojure-mode-map "kp"  "publish-fn")
+(key-chord-define clojure-mode-map "KL"  "-> ")
+(key-chord-define clojure-mode-map "KK"  "{:keys [")
+(key-chord-define clojure-mode-map "KP"  "publish-fn")
 (key-chord-define clojure-mode-map "PP"  "product")
 (key-chord-define clojure-mode-map "SS"  "size")
 (key-chord-define clojure-mode-map "Ss"  "side")
