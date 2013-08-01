@@ -14,6 +14,9 @@
 
 (add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
+(add-hook 'clojure-mode-hook 'turn-on-fci-mode) ;;; show me fci in clj
+
+(setq-default fill-column 90) ;;; I like my right margin at 90
 
 ;; Develop in unplugged-pack snippets dir
 ;; use snippets from emacs-live
@@ -180,7 +183,6 @@
 (require 'expectations-mode)
 (add-to-list 'load-path "~/.emacs.d/local/Fill-Column-Indicator/")
 (require 'fill-column-indicator)
-(setq fci-rule-column 90)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; define environment vars ;;;
