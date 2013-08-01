@@ -17,3 +17,4 @@ This assumes you don't have emacs-live set up at all. Adjust to taste.
     cd local
     git clone https://github.com/jaycfields/unplugged-pack.git
     git clone https://github.com/gar3thjon3s/expectations-mode.git
+    git clone git@github.com:alpaker/Fill-Column-Indicator.git
