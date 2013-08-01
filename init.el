@@ -14,7 +14,6 @@
 
 (add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
-(add-hook 'clojure-mode-hook 'turn-on-fci-mode) ;;; show me fci in clj
 
 (setq-default fill-column 90) ;;; I like my right margin at 90
 
@@ -432,6 +431,45 @@
   (win-switch-dispatch))
 
 (global-set-key (kbd "C-c w l c") 'console-layout)
+
+(defun linux-layout ()
+  (interactive)
+  (delete-other-windows)
+  (split-window-horizontally)
+  (split-window-horizontally)
+  (win-switch-dispatch)
+  (win-switch-dispatch)
+  (switch-to-buffer "*nrepl-server*")
+  (split-window-vertically)
+  (win-switch-dispatch)
+  (switch-to-buffer "*nrepl*")
+  (win-switch-dispatch)
+  (balance-windows))
+
+(global-set-key (kbd "C-c w l l") 'linux-layout)
+
+(defun visible-window (wlist)
+  (if (equal 1 (length wlist))
+      nil
+    (if (get-buffer-window (first wlist))
+        wlist
+      (visible-repl (cdr wlist)))))
+
+(defun toggle-window-from-list (l)
+  (when l
+    (select-window (get-buffer-window (first l)))
+    (switch-to-buffer (second l))))
+
+(defun toggle-repl-buffers ()
+  (interactive)
+  (let* ((w1 (get-buffer-window (current-buffer))))
+    (toggle-window-from-list (visible-window '("*nrepl*" "*nrepl*<2>"
+                                               "*nrepl*")))
+    (toggle-window-from-list (visible-window '("*nrepl-server*" "*nrepl-server*<2>"
+                                               "*nrepl-server*")))
+    (select-window w1)))
+
+(global-set-key (kbd "C-c w t r") 'toggle-repl-buffers)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; line manipulation ;;;
