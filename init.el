@@ -448,12 +448,22 @@
 
 (global-set-key (kbd "C-c w l l") 'linux-layout)
 
+(defun move-buffer-to-other-window ()
+  (interactive)
+  (let* ((w1 (get-buffer-window (current-buffer)))
+         (w2 (next-window)))
+    (set-window-buffer w2 (current-buffer))
+    (set-window-start w2 (window-start w1)))
+  (previous-buffer))
+
+(global-set-key (kbd "C-c w .") 'move-buffer-to-other-window)
+
 (defun visible-window (wlist)
   (if (equal 1 (length wlist))
       nil
     (if (get-buffer-window (first wlist))
         wlist
-      (visible-repl (cdr wlist)))))
+      (visible-window (cdr wlist)))))
 
 (defun toggle-window-from-list (l)
   (when l
