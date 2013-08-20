@@ -180,8 +180,8 @@
 
 (add-to-list 'load-path "~/.emacs.d/local/expectations-mode/")
 (require 'expectations-mode)
-(add-to-list 'load-path "~/.emacs.d/local/Fill-Column-Indicator/")
-(require 'fill-column-indicator)
+;; (add-to-list 'load-path "~/.emacs.d/local/Fill-Column-Indicator/")
+;; (require 'fill-column-indicator)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; define environment vars ;;;
