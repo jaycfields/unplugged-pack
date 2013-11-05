@@ -196,6 +196,7 @@
 
 (global-set-key (kbd "C-.") 'er/expand-region)
 (global-set-key (kbd "C-M-.") 'er/contract-region)
+(global-set-key (kbd "C-S-k") 'live-paredit-forward-kill-sexp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; expectations common and enhanced tasks ;;;
@@ -546,7 +547,7 @@
             (replace-string "," "" nil pos1 pos2))
         (replace-string "," "" nil (point-min) (point-max))))))
 
-(global-set-key (kbd "C-S-k") 'remove-commas)
+(global-set-key (kbd "C-<") 'remove-commas)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; grep'ing in a project ;;;
