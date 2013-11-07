@@ -12,8 +12,8 @@
 (setq-default truncate-lines t) ;;; don't break lines automatically
 (setq-default live-disable-zone t) ;;; this does not work well over ssh
 
-(add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
+(add-hook 'nrepl-connected-hook 'rename-second-nrepl-connection) ;;; always default to first connection
 
 (setq-default fill-column 90) ;;; I like my right margin at 90
 
@@ -336,12 +336,15 @@
 
 (global-set-key (kbd "C-c x") 'toggle-expectations-and-src)
 
-(defun expectations-repl (project-root)
-  (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
-  (when (get-buffer "*nrepl-connection*<2>")
-    (nrepl-close (get-buffer "*nrepl-connection*<2>")))
-  (cd project-root)
-  (nrepl-jack-in))
+(defun rename-second-nrepl-connection ()
+  (when (eq 2 (length nrepl-connection-list))
+    (nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
+    (switch-to-buffer (nrepl-current-repl-buffer))
+    (rename-buffer "*nrepl expectations*")
+    (when (get-buffer "*nrepl-server*<2>")
+      (switch-to-buffer "*nrepl-server*<2>")
+      (rename-buffer "*nrepl-server expectations*")))
+  (reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; java helper fns ;;;
@@ -377,8 +380,8 @@
   (let ((project-name (file-name-nondirectory (directory-file-name project-root))))
     (when (get-buffer "*nrepl-connection*")
       (switch-to-buffer "*nrepl-server*")
-      (set-buffer-modified-p nil)
-      (nrepl-close (get-buffer "*nrepl-connection*")))
+      (set-buffer-modified-p nil))
+    (nrepl-quit)
     (when (equal current-prefix-arg nil)
       (mapc 'kill-buffer (buffer-list)))
     (message (concat "project root: " project-root))
@@ -391,7 +394,9 @@
       (when (file-exists-p fname)
         (delete-file fname))
       (write-file fname))
-    (bury-buffer)))
+    (cd project-root)
+    (bury-buffer)
+    (nrepl-jack-in)))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
 
@@ -474,9 +479,9 @@
 (defun toggle-repl-buffers ()
   (interactive)
   (let* ((w1 (get-buffer-window (current-buffer))))
-    (toggle-window-from-list (visible-window '("*nrepl*" "*nrepl*<2>"
+    (toggle-window-from-list (visible-window '("*nrepl*" "*nrepl expectations*"
                                                "*nrepl*")))
-    (toggle-window-from-list (visible-window '("*nrepl-server*" "*nrepl-server*<2>"
+    (toggle-window-from-list (visible-window '("*nrepl-server*" "*nrepl-server expectations*"
                                                "*nrepl-server*")))
     (select-window w1)))
 
