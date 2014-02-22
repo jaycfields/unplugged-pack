@@ -207,6 +207,7 @@
   (expect 'defun)
   (expect-let 'defun)
   (given 'defun)
+  (side-effects 1)
   (context 1)
   (freeze-time 1)
   (redef-state 1)
