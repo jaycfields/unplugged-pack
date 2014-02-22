@@ -12,6 +12,7 @@
 (setq-default truncate-lines t) ;;; don't break lines automatically
 (setq-default live-disable-zone t) ;;; this does not work well over ssh
 
+(add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
 (add-hook 'nrepl-connected-hook 'rename-second-nrepl-connection) ;;; always default to first connection
 
@@ -43,6 +44,9 @@
     (nrepl-make-repl-connection-default default-connection)))
 
 (define-key nrepl-interaction-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
+
+(define-clojure-indent
+  (cond-> 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; things in emacs-live that are in dev, but not prod ;;;
@@ -397,7 +401,8 @@
       (write-file fname))
     (cd project-root)
     (bury-buffer)
-    (nrepl-jack-in)))
+;    (nrepl-jack-in)
+    ))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
 
