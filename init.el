@@ -29,10 +29,13 @@
 (dolist (x '(scheme emacs-lisp lisp clojure)) ;;; disable rainbow-delimiters
   (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
 
-(defun reset-nrepl-connection-to-default ()
-  (if (get-buffer "*nrepl-connection*")
-      (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*"))
-    (message "*** PROBABLE ERROR *** *nrepl-connection* could not be found")))
+(defun reset-nrepl-connection-to-default
+	(let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj")))
+		(let ((connection (format "*%s %s*" "nrepl-connection" (file-name-nondirectory (directory-file-name project-root)))))
+  		(if (get-buffer connection)
+      		(nrepl-make-repl-connection-default (get-buffer connection))
+    			(message (concat "*** PROBABLE ERROR *** " connection " could not be found"))))))
+				
 
 (defun load-current-buffer-to-all-nrepls ()
   (interactive)
@@ -40,10 +43,10 @@
     (dolist (x nrepl-connection-list)
       (nrepl-make-repl-connection-default (get-buffer x))
       (message (concat "loading buffer to " x))
-      (nrepl-load-current-buffer))
+      (cider-load-current-buffer))
     (nrepl-make-repl-connection-default default-connection)))
 
-(define-key nrepl-interaction-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
+(define-key cider-repl-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
 
 (define-clojure-indent
   (cond-> 1))
@@ -382,17 +385,21 @@
 
 (defun switch-project (project-root)
   (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
-  (let ((project-name (file-name-nondirectory (directory-file-name project-root))))
-    (when (get-buffer "*nrepl-connection*")
-      (switch-to-buffer "*nrepl-server*")
+  (let (
+	  (project-name (file-name-nondirectory (directory-file-name project-root)))
+	  (connection (format "*%s %s*" "nrepl-connection" (file-name-nondirectory (directory-file-name project-root))))
+	  (server (format "*%s %s*" "nrepl-server" (file-name-nondirectory (directory-file-name project-root))))
+	  )
+    (when (get-buffer connection)
+      (switch-to-buffer server)
       (set-buffer-modified-p nil))
-    (nrepl-quit)
+    (cider-quit)
     (when (equal current-prefix-arg nil)
       (mapc 'kill-buffer (buffer-list)))
     (message (concat "project root: " project-root))
     (cd project-root)
-    (nrepl-jack-in)
-    (switch-to-buffer "*nrepl-server*")
+    (cider-jack-in)
+    (switch-to-buffer server)
     (clojure-mode)
     (make-directory (concat "~/tmp/emacs/" project-name) t)
     (let ((fname (concat "~/tmp/emacs/" project-name "/*nrepl-server*")))
@@ -401,7 +408,6 @@
       (write-file fname))
     (cd project-root)
     (bury-buffer)
-;    (nrepl-jack-in)
     ))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
@@ -409,7 +415,7 @@
 (defun start-server ()
   (interactive)
   (load-current-buffer-to-all-nrepls)
-  (nrepl-interactive-eval (nrepl-last-expression))
+  (cider-interactive-eval (nrepl-last-expression))
   (console-layout))
 
 (global-set-key (kbd "C-c C-x C-e") 'start-server)
@@ -613,3 +619,4 @@
 (global-set-key (kbd "C-c g s i") 'grep-string-in)
 (global-set-key (kbd "C-c M-g") 'rerun-last-grep)
 (global-set-key (kbd "C-c s g") 'switch-to-grep)
+(add-hook 'clojure-mode-hook 'cider-mode)
