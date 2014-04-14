@@ -15,6 +15,8 @@
 (add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
 (add-hook 'nrepl-connected-hook 'rename-second-nrepl-connection) ;;; always default to first connection
+(add-hook 'clojure-mode-hook 'cider-mode)
+
 
 (setq-default fill-column 90) ;;; I like my right margin at 90
 
@@ -383,6 +385,16 @@
 ;;; clojure project fns ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(defun cider-force-quit ()
+  "Quit CIDER without a prompt"
+  (interactive)
+  (dolist (connection nrepl-connection-list)
+  	(when connection
+    (nrepl-close connection)))
+    (message "All active nREPL connections were closed")
+    (cider-close-ancilliary-buffers))
+	
 (defun switch-project (project-root)
   (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
   (let (
@@ -393,7 +405,7 @@
     (when (get-buffer connection)
       (switch-to-buffer server)
       (set-buffer-modified-p nil))
-    (cider-quit)
+    (cider-force-quit)
     (when (equal current-prefix-arg nil)
       (mapc 'kill-buffer (buffer-list)))
     (message (concat "project root: " project-root))
@@ -619,4 +631,3 @@
 (global-set-key (kbd "C-c g s i") 'grep-string-in)
 (global-set-key (kbd "C-c M-g") 'rerun-last-grep)
 (global-set-key (kbd "C-c s g") 'switch-to-grep)
-(add-hook 'clojure-mode-hook 'cider-mode)
