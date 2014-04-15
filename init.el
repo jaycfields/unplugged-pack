@@ -31,7 +31,7 @@
 (dolist (x '(scheme emacs-lisp lisp clojure)) ;;; disable rainbow-delimiters
   (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
 
-(defun reset-nrepl-connection-to-default
+(defun reset-nrepl-connection-to-default ()
 	(let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj")))
 		(let ((connection (format "*%s %s*" "nrepl-connection" (file-name-nondirectory (directory-file-name project-root)))))
   		(if (get-buffer connection)
@@ -237,7 +237,7 @@
     (save-excursion
       (when (clojure-find-ns)
         (goto-char (match-beginning 0))
-        (nrepl-eval (nrepl-expression-at-point)))))
+		(cider-eval-defun-at-point))))	
   (save-window-excursion
     (save-excursion
       (save-restriction
@@ -248,7 +248,8 @@
           (setq pos2 (point))
           (cua-set-mark)
           (narrow-to-region pos1 pos2)
-          (expectations-run-tests t))))))
+          (expectations-run-tests t)
+		  )))))
 
 (defun run-expectations-for-source ()
   (interactive)
