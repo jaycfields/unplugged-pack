@@ -352,8 +352,8 @@
     (nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
     (switch-to-buffer (nrepl-current-repl-buffer))
     (rename-buffer "*nrepl expectations*")
-    (when (get-buffer "*nrepl-server*<2>")
-      (switch-to-buffer "*nrepl-server*<2>")
+    (when (get-buffer (format "*nrepl-server %s*<2>"  (file-name-nondirectory (directory-file-name project-root))))
+      (switch-to-buffer(format "*nrepl-server %s<2>" (file-name-nondirectory (directory-file-name project-root))))
       (rename-buffer "*nrepl-server expectations*")))
   (reset-nrepl-connection-to-default))
 
@@ -401,7 +401,7 @@
   (let (
 	  (project-name (file-name-nondirectory (directory-file-name project-root)))
 	  (connection (format "*%s %s*" "nrepl-connection" (file-name-nondirectory (directory-file-name project-root))))
-	  (server (format "*%s %s*" "nrepl-server" (file-name-nondirectory (directory-file-name project-root))))
+	  (server (format "*nrepl-server %s*" (file-name-nondirectory (directory-file-name project-root))))
 	  )
     (when (get-buffer connection)
       (switch-to-buffer server)
@@ -411,8 +411,8 @@
       (mapc 'kill-buffer (buffer-list)))
     (message (concat "project root: " project-root))
     (cd project-root)
-    (cider-jack-in)
-    ; (switch-to-buffer server)
+    ; (cider-jack-in)
+    (switch-to-buffer server)
     (clojure-mode)
     (make-directory (concat "~/tmp/emacs/" project-name) t)
     (let ((fname (concat "~/tmp/emacs/" project-name (format "/%s" server))))
@@ -420,8 +420,9 @@
         (delete-file fname))
       (write-file fname))
     (cd project-root)
-    ; (bury-buffer)
-    ; (cider-jack-in)
+    (bury-buffer)
+    (cider-jack-in)
+	(cider-mode)
     ))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
@@ -456,7 +457,7 @@
   (delete-other-windows)
   (split-window-horizontally)
   (win-switch-dispatch)
-  (switch-to-buffer "*nrepl-server*")
+  (switch-to-buffer (format "*nrepl-server %s*" (file-name-nondirectory (directory-file-name project-root))))
   (split-window-vertically)
   (win-switch-dispatch)
   (switch-to-buffer "*nrepl*")
@@ -471,7 +472,7 @@
   (split-window-horizontally)
   (win-switch-dispatch)
   (win-switch-dispatch)
-  (switch-to-buffer "*nrepl-server*")
+  (switch-to-buffer (format "*nrepl-server %s*" (file-name-nondirectory (directory-file-name project-root))))
   (split-window-vertically)
   (win-switch-dispatch)
   (switch-to-buffer "*nrepl*")
@@ -507,8 +508,8 @@
   (let* ((w1 (get-buffer-window (current-buffer))))
     (toggle-window-from-list (visible-window '("*nrepl*" "*nrepl expectations*"
                                                "*nrepl*")))
-    (toggle-window-from-list (visible-window '("*nrepl-server*" "*nrepl-server expectations*"
-                                               "*nrepl-server*")))
+    (toggle-window-from-list (visible-window '((format "*nrepl-server %s*" (file-name-nondirectory (directory-file-name project-root))) "*nrepl-server expectations*"
+                                               (format "*nrepl-server %s*" (file-name-nondirectory (directory-file-name project-root))))))
     (select-window w1)))
 
 (global-set-key (kbd "C-c w t r") 'toggle-repl-buffers)
