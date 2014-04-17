@@ -33,7 +33,8 @@
 
 (defun reset-nrepl-connection-to-default ()
 	(let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj")))
-		(let ((connection (format "*%s %s*" "nrepl-connection" (file-name-nondirectory (directory-file-name project-root)))))
+		; (let ((connection (format "*%s %s*" "nrepl-connection" (file-name-nondirectory (directory-file-name project-root)))))
+		(let ((connection (find-buffer "*nrepl-connection %s*")))
   		(if (get-buffer connection)
       		(nrepl-make-repl-connection-default (get-buffer connection))
     			(message (concat "*** PROBABLE ERROR *** " connection " could not be found"))))))
