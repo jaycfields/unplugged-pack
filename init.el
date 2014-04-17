@@ -352,8 +352,8 @@
     (nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
     (switch-to-buffer (nrepl-current-repl-buffer))
     (rename-buffer "*nrepl expectations*")
-    (when (get-buffer "*nrepl-server*<2>")
-      (switch-to-buffer "*nrepl-server*<2>")
+    (when (get-buffer (format "*nrepl-server %s*<2>" (file-name-nondirectory (directory-file-name project-root))))
+      (switch-to-buffer (format "*nrepl-server %s*<2>" (file-name-nondirectory (directory-file-name project-root))))
       (rename-buffer "*nrepl-server expectations*")))
   (reset-nrepl-connection-to-default))
 
@@ -457,10 +457,10 @@
   (delete-other-windows)
   (split-window-horizontally)
   (win-switch-dispatch)
-  (switch-to-buffer "*nrepl-server*")
+  (switch-to-buffer (find-buffer "*nrepl-server"))
   (split-window-vertically)
   (win-switch-dispatch)
-  (switch-to-buffer "*nrepl*")
+  (switch-to-buffer "*cider-repl localhost*")
   (win-switch-dispatch))
 
 (global-set-key (kbd "C-c w l c") 'console-layout)
@@ -472,11 +472,10 @@
   (split-window-horizontally)
   (win-switch-dispatch)
   (win-switch-dispatch)
-  ; (switch-to-buffer (format "*%s %s*" "nrepl-server" (file-name-nondirectory (directory-file-name project-root))))
-  (switch-to-buffer "*nrepl-server*")
+  (switch-to-buffer (find-buffer "*nrepl-server"))
   (split-window-vertically)
   (win-switch-dispatch)
-  (switch-to-buffer "*nrepl*")
+  (switch-to-buffer "*cider-repl localhost*")
   (win-switch-dispatch)
   (balance-windows))
 
@@ -507,10 +506,10 @@
 (defun toggle-repl-buffers ()
   (interactive)
   (let* ((w1 (get-buffer-window (current-buffer))))
-    (toggle-window-from-list (visible-window '("*nrepl*" "*nrepl expectations*"
-                                               "*nrepl*")))
-    (toggle-window-from-list (visible-window '("*nrepl-server*" "*nrepl-server expectations*"
-                                               "*nrepl-server*")))
+    (toggle-window-from-list (visible-window '("*cider-repl localhost*" "*nrepl expectations*"
+                                               "*cider-repl localhost*")))
+    (toggle-window-from-list (visible-window '((find-buffer "*nrepl-server") "*nrepl-server expectations*"
+                                               (find-buffer "*nrepl-server"))))
     (select-window w1)))
 
 (global-set-key (kbd "C-c w t r") 'toggle-repl-buffers)
@@ -629,6 +628,15 @@
   (interactive)
   (switch-to-buffer-other-window "*grep*"))
 
+(defun find-buffer (buffer)
+  (first 
+	  (filter (lambda (b) (string-match buffer b)) (live-list-buffer-names)))
+)
+
+(defun filter (condp lst)
+      (delq nil
+            (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
+			
 (global-set-key (kbd "C-c g p") 'grep-in-project)
 (global-set-key (kbd "C-c g i") 'grep-in)
 (global-set-key (kbd "C-c g s p") 'grep-string-in-project)
