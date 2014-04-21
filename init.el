@@ -12,7 +12,7 @@
 (setq-default truncate-lines t) ;;; don't break lines automatically
 (setq-default live-disable-zone t) ;;; this does not work well over ssh
 
-(add-hook 'nrepl-connected-hook 'bury-buffer) ;;; don't send me to the repl on connect
+(setq cider-repl-pop-to-buffer-on-connect nil) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
 (add-hook 'nrepl-connected-hook 'rename-second-nrepl-connection) ;;; always default to first connection
 (add-hook 'clojure-mode-hook 'cider-mode)
