@@ -269,8 +269,8 @@
 
 (defun run-expectations-for-file (&optional prefix)
   (interactive "P")
-  (when (get-buffer "*nrepl-connection*<2>")
-    (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection*<2>")))
+  (when (find-buffer "*nrepl-connection %s*<2>")
+    (nrepl-make-repl-connection-default (get-buffer (find-buffer "*nrepl-connection %s*<2>"))))
   (if expectations-mode
       (if prefix
           (run-isolated-expectation)
@@ -353,8 +353,8 @@
     (nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
     (switch-to-buffer (nrepl-current-repl-buffer))
     (rename-buffer "*nrepl expectations*")
-    (when (get-buffer (format "*nrepl-server %s*<2>" (file-name-nondirectory (directory-file-name project-root))))
-      (switch-to-buffer (format "*nrepl-server %s*<2>" (file-name-nondirectory (directory-file-name project-root))))
+    (when (get-buffer (find-buffer "*nrepl-server %s*<2>"))
+      (switch-to-buffer (find-buffer "*nrepl-server %s*<2>"))
       (rename-buffer "*nrepl-server expectations*")))
   (reset-nrepl-connection-to-default))
 
@@ -631,8 +631,7 @@
 
 (defun find-buffer (buffer)
   (first 
-	  (filter (lambda (b) (string-match buffer b)) (live-list-buffer-names)))
-)
+	  (filter (lambda (b) (string-match buffer b)) (live-list-buffer-names))))
 
 (defun filter (condp lst)
       (delq nil
