@@ -14,7 +14,8 @@
 
 (setq cider-repl-pop-to-buffer-on-connect nil) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
-(add-hook 'nrepl-connected-hook 'rename-second-nrepl-connection) ;;; always default to first connection
+; (add-hook 'nrepl-connected-hook 'rename-second-nrepl-connection) ;;; always default to first connection
+(add-hook 'nrepl-connected-hook 'rename-expectation-buffers-connection) ;;; always default to first connection	
 (add-hook 'clojure-mode-hook 'cider-mode)
 
 
@@ -33,11 +34,10 @@
 
 (defun reset-nrepl-connection-to-default ()
 	(let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj")))
-		; (let ((connection (format "*%s %s*" "nrepl-connection" (file-name-nondirectory (directory-file-name project-root)))))
-		(let ((connection (find-buffer "*nrepl-connection %s*")))
+		(let ((connection "*nrepl-connection localhost*"))
   		(if (get-buffer connection)
       		(nrepl-make-repl-connection-default (get-buffer connection))
-    			(message (concat "*** PROBABLE ERROR *** " connection " could not be found"))))))
+    		(message (concat "*** PROBABLE ERROR *** " connection " could not be found"))))))
 				
 
 (defun load-current-buffer-to-all-nrepls ()
@@ -45,7 +45,6 @@
   (let ((default-connection (nrepl-current-connection-buffer)))
     (dolist (x nrepl-connection-list)
       (nrepl-make-repl-connection-default (get-buffer x))
-      (message (concat "loading buffer to " x))
       (cider-load-current-buffer))
     (nrepl-make-repl-connection-default default-connection)))
 
@@ -269,8 +268,8 @@
 
 (defun run-expectations-for-file (&optional prefix)
   (interactive "P")
-  (when (find-buffer "*nrepl-connection %s*<2>")
-    (nrepl-make-repl-connection-default (get-buffer (find-buffer "*nrepl-connection %s*<2>"))))
+  (when (find-buffer "*nrepl-connection expectations")
+    (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection expectations")))
   (if expectations-mode
       (if prefix
           (run-isolated-expectation)
@@ -350,6 +349,7 @@
 
 (defun rename-second-nrepl-connection ()
   (when (eq 2 (length nrepl-connection-list))
+	(message (get-buffer (second nrepl-connection-list)))
     (nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
     (switch-to-buffer (nrepl-current-repl-buffer))
     (rename-buffer "*nrepl expectations*")
@@ -357,6 +357,22 @@
       (switch-to-buffer (find-buffer "*nrepl-server %s*<2>"))
       (rename-buffer "*nrepl-server expectations*")))
   (reset-nrepl-connection-to-default))
+  
+
+(defun rename-expectation-buffers-connection ()
+	(when (eq 2 (length nrepl-connection-list))
+	  		(nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
+	  	  	(switch-to-buffer (get-buffer (second nrepl-connection-list)))
+	  	  	; (rename-buffer "*nrepl-connection expectations*")
+			; (setcdr nrepl-connection-list '("*nrepl-server expectations*"))
+	  		(when (get-buffer (find-buffer "*nrepl-server nil*"))
+	    		(switch-to-buffer (find-buffer "*nrepl-server nil*"))
+					(rename-buffer "*nrepl-server expectations*"))
+	  		(when (get-buffer (find-buffer "*cider-repl localhost*<2>"))
+	    		(switch-to-buffer (find-buffer "*cider-repl localhost*<2>"))
+					(rename-buffer "*cider-repl expectations*"))
+				)
+	(reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; java helper fns ;;;
@@ -396,35 +412,49 @@
     (nrepl-close connection)))
     (message "All active nREPL connections were closed")
     (cider-close-ancilliary-buffers))
+
+
+
+(defun switch-expectation-repl (project-root project-name)
+	(let ((server (format "*nrepl-server %s*<2>" project-name)))
+		(cider-jack-in)
+		(switch-to-buffer server)
+		(rename-buffer "*nrepl-server expectations*")
+		(clojure-mode)
+  	  	(let ((fname (concat "~/tmp/emacs/" project-name  "*nrepl-server expectations*")))
+  	  	    		(when (file-exists-p fname)
+  	  	      	  		(delete-file fname))
+  	  	    			(write-file fname))
+		(cd project-root)
+		(bury-buffer)))
+
+(defun switch-project-repl (project-root project-name)
+	(let ((server (format "*nrepl-server %s*" project-name)))
+  		(when (get-buffer server)
+  	  		(switch-to-buffer server)
+    		(set-buffer-modified-p nil))
+  	  	(cider-force-quit)
+  		(when (equal current-prefix-arg nil)
+    		(mapc 'kill-buffer (buffer-list)))
+  		(message (concat "project root: " project-root))
+  	  	(cd project-root)
+  	  	(cider-jack-in)
+  		(switch-to-buffer server)
+		(clojure-mode)
+  	  	(make-directory (concat "~/tmp/emacs/" project-name) t)
+  	  	(let ((fname (concat "~/tmp/emacs/" project-name (format "/%s" server))))
+    		(when (file-exists-p fname)
+      	  		(delete-file fname))
+    			(write-file fname))
+  			  (cd project-root)
+  			(bury-buffer)))
 	
 (defun switch-project (project-root)
-  (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
-  (let (
-	  (project-name (file-name-nondirectory (directory-file-name project-root)))
-	  (connection (format "*nrepl-connection %s*" (file-name-nondirectory (directory-file-name project-root))))
-	  (server (format "*nrepl-server %s*" (file-name-nondirectory (directory-file-name project-root))))
-	  )
-    (when (get-buffer server)
-      (switch-to-buffer server)
-      (set-buffer-modified-p nil))
-    (cider-force-quit)
-    (when (equal current-prefix-arg nil)
-      (mapc 'kill-buffer (buffer-list)))
-    (message (concat "project root: " project-root))
-    (cd project-root)
-    (cider-jack-in)
-    (switch-to-buffer server)
-    (clojure-mode)
-    (make-directory (concat "~/tmp/emacs/" project-name) t)
-    (let ((fname (concat "~/tmp/emacs/" project-name (format "/%s" server))))
-      (when (file-exists-p fname)
-        (delete-file fname))
-      (write-file fname))
-    (cd project-root)
-    (bury-buffer)
-    ; (cider-jack-in)
-	(cider-mode)
-    ))
+	(interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
+	(let ((project-name (file-name-nondirectory (directory-file-name project-root))))
+		(switch-project-repl project-root project-name)
+		(switch-expectation-repl project-root project-name)
+		))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
 
