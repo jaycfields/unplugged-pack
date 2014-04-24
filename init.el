@@ -425,7 +425,6 @@
   		(when (equal current-prefix-arg nil)
     		(mapc 'kill-buffer (buffer-list)))
 		(switch-repl project-root project-name (format "*nrepl-server %s*" project-name) (format "*nrepl-server %s*" project-name))
-		(sleep-for 1 0)
 		(switch-repl project-root project-name (format "*nrepl-server %s*<2>" project-name) "*nrepl-server expectations*")
 		))
 
