@@ -374,7 +374,7 @@
   (interactive)
   (er/mark-word)
   (let* ((project-root (locate-dominating-file (file-name-directory (buffer-file-name)) "project.clj"))
-         (the-str (buffer-substring-no-properties (region-beginning) (region-end))))
+         (the-str (concat (buffer-substring-no-properties (region-beginning) (region-end)) ".java")))
     (if project-root
         (progn
           (grep-string-in the-str (concat project-root "lib/sources"))
