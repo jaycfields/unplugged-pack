@@ -16,7 +16,7 @@
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
 (add-hook 'nrepl-connected-hook 'rename-expectation-buffers-connection) ;;; always default to first connection	
 (add-hook 'clojure-mode-hook 'cider-mode)
-
+	
 
 (setq-default fill-column 90) ;;; I like my right margin at 90
 
@@ -346,16 +346,21 @@
 (global-set-key (kbd "C-c x") 'toggle-expectations-and-src)
   
 
+(defun rename-buffers-on-connected ()
+	(nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
+	(switch-to-buffer (get-buffer (second nrepl-connection-list)))
+	(when (get-buffer "*nrepl-server nil*")
+		(switch-to-buffer "*nrepl-server nil*")
+			(rename-buffer "*nrepl-server expectations*"))
+	(when (get-buffer "*cider-repl localhost*<2>")
+		(switch-to-buffer "*cider-repl localhost*<2>")	
+			(rename-buffer "*cider-repl expectations*")))
+			
 (defun rename-expectation-buffers-connection ()
 	(when (eq 2 (length nrepl-connection-list))
-	  		(nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
-	  	  	(switch-to-buffer (get-buffer (second nrepl-connection-list)))
-	  		(when (get-buffer "*nrepl-server nil*")
-	    		(switch-to-buffer "*nrepl-server nil*")
-					(rename-buffer "*nrepl-server expectations*"))
-	  		(when (get-buffer "*cider-repl localhost*<2>")
-	    		(switch-to-buffer "*cider-repl localhost*<2>")	
-					(rename-buffer "*cider-repl expectations*")))
+		(if (not cider-repl-pop-to-buffer-on-connect)
+			(save-window-excursion (rename-buffers-on-connected))
+	  		(rename-buffers-on-connected)))
 	(reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
