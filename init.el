@@ -361,6 +361,7 @@
 		(if (not cider-repl-pop-to-buffer-on-connect)
 			(save-window-excursion (rename-buffers-on-connected))
 	  		(rename-buffers-on-connected)))
+	(message "cider-repl connected")
 	(reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
