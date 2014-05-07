@@ -360,8 +360,8 @@
 	(when (eq 2 (length nrepl-connection-list))
 		(if (not cider-repl-pop-to-buffer-on-connect)
 			(save-window-excursion (rename-buffers-on-connected))
-	  		(rename-buffers-on-connected)))
-	(message "cider-repl connected")
+	  		(rename-buffers-on-connected))
+		(message "expectation repl connected"))
 	(reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
