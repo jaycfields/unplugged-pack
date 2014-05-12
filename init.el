@@ -360,8 +360,8 @@
 	(when (eq 2 (length nrepl-connection-list))
 		(if (not cider-repl-pop-to-buffer-on-connect)
 			(save-window-excursion (rename-buffers-on-connected))
-	  		(rename-buffers-on-connected)))
-	(message "cider-repl connected")
+	  		(rename-buffers-on-connected))
+		(message "expectation repl connected"))
 	(reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -422,6 +422,11 @@
   		  (cd project-root)
   	(bury-buffer))
 		
+(defun switch-expectations-repl (project-root project-name)
+	(message "Starting expectations repl...")
+	(remove-hook 'nrepl-connected-hook (first nrepl-connected-hook ))
+	(switch-repl project-root project-name (format "*nrepl-server %s*<2>" project-name) "*nrepl-server expectations*"))
+	
 (defun switch-project (project-root)
 	(interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
 	(let ((project-name (file-name-nondirectory (directory-file-name project-root))))
@@ -430,9 +435,9 @@
 		(cider-force-quit)
   		(when (equal current-prefix-arg nil)
     		(mapc 'kill-buffer (buffer-list)))
-		(switch-repl project-root project-name (format "*nrepl-server %s*" project-name) (format "*nrepl-server %s*" project-name))
-		(switch-repl project-root project-name (format "*nrepl-server %s*<2>" project-name) "*nrepl-server expectations*")
-		))
+	  	(let ((fn (apply-partially #'switch-expectations-repl project-root project-name)))
+	  		(add-hook 'nrepl-connected-hook fn)
+			(switch-repl project-root project-name (format "*nrepl-server %s*" project-name) (format "*nrepl-server %s*" project-name)))))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
 
