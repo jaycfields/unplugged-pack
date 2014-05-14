@@ -51,14 +51,6 @@
 (define-clojure-indent
   (cond-> 1))
 
-(defun cider-eval-last-sexp-to-all-nrepls ()
-	(interactive)
-	  (dolist (x nrepl-connection-list)
-    	(nrepl-make-repl-connection-default (get-buffer x))
-    	(cider-eval-last-sexp))
-  	  (nrepl-make-repl-connection-default "*nrepl-connection localhost*"))
-
-(define-key cider-mode-map (kbd "C-x C-e") 'cider-eval-last-sexp-to-all-nrepls)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; things in emacs-live that are in dev, but not prod ;;;
 ;;; can be deleted when promoted to prod emacs-live    ;;;
