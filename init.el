@@ -426,13 +426,20 @@
 	(message "Starting expectations repl...")
 	(remove-hook 'nrepl-connected-hook (first nrepl-connected-hook ))
 	(switch-repl project-root project-name (format "*nrepl-server %s*<2>" project-name) "*nrepl-server expectations*"))
-	
+
+(defun load-project-env (project-root)
+	(let ((project-env (format "%s/project.el" project-root)))
+		(when (file-exists-p project-env)
+			(load-file project-env))))
+			
+				
 (defun switch-project (project-root)
 	(interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
 	(let ((project-name (file-name-nondirectory (directory-file-name project-root))))
 		(dolist (x (find-buffers "*nrepl-server"))
 			(mark-buffer-umodified x))
 		(cider-force-quit)
+		(load-project-env project-root)
   		(when (equal current-prefix-arg nil)
     		(mapc 'kill-buffer (buffer-list)))
 	  	(let ((fn (apply-partially #'switch-expectations-repl project-root project-name)))
