@@ -414,6 +414,7 @@
   	(switch-to-buffer server)
 	(rename-buffer buffer)
 	(clojure-mode)
+	(require 'cider-macroexpansion)
   	(make-directory (concat "~/tmp/emacs/" project-name) t)
   	(let ((fname (concat "~/tmp/emacs/" project-name (format "/%s" buffer))))
     	(when (file-exists-p fname)
