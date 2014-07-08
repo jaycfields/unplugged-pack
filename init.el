@@ -14,9 +14,9 @@
 
 (setq cider-repl-pop-to-buffer-on-connect nil) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
-(add-hook 'nrepl-connected-hook 'rename-expectation-buffers-connection) ;;; always default to first connection	
+(add-hook 'nrepl-connected-hook 'rename-expectation-buffers-connection) ;;; always default to first connection
 (add-hook 'clojure-mode-hook 'cider-mode)
-	
+
 
 (setq-default fill-column 90) ;;; I like my right margin at 90
 
@@ -37,7 +37,7 @@
   		(if (get-buffer connection)
       		(nrepl-make-repl-connection-default (get-buffer connection))
     		(message (concat "*** PROBABLE ERROR *** " connection " could not be found"))))))
-				
+
 
 (defun load-current-buffer-to-all-nrepls ()
   (interactive)
@@ -204,6 +204,9 @@
 (global-set-key (kbd "C-.") 'er/expand-region)
 (global-set-key (kbd "C-M-.") 'er/contract-region)
 (global-set-key (kbd "C-S-k") 'live-paredit-forward-kill-sexp)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; expectations common and enhanced tasks ;;;
@@ -235,7 +238,7 @@
     (save-excursion
       (when (clojure-find-ns)
         (goto-char (match-beginning 0))
-		(cider-eval-defun-at-point))))	
+		(cider-eval-defun-at-point))))
   (save-window-excursion
     (save-excursion
       (save-restriction
@@ -344,7 +347,7 @@
     (find-expectations)))
 
 (global-set-key (kbd "C-c x") 'toggle-expectations-and-src)
-  
+
 
 (defun rename-buffers-on-connected ()
 	(nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
@@ -353,9 +356,9 @@
 		(switch-to-buffer "*nrepl-server nil*")
 			(rename-buffer "*nrepl-server expectations*"))
 	(when (get-buffer "*cider-repl localhost*<2>")
-		(switch-to-buffer "*cider-repl localhost*<2>")	
+		(switch-to-buffer "*cider-repl localhost*<2>")
 			(rename-buffer "*cider-repl expectations*")))
-			
+
 (defun rename-expectation-buffers-connection ()
 	(when (eq 2 (length nrepl-connection-list))
 		(if (not cider-repl-pop-to-buffer-on-connect)
@@ -407,7 +410,7 @@
 	(when (get-buffer buffer)
 		(switch-to-buffer buffer)
 			(set-buffer-modified-p nil)))
-			
+
 (defun switch-repl (project-root project-name server buffer)
   	(cd project-root)
   	(cider-jack-in)
@@ -422,7 +425,7 @@
     		(write-file fname))
   		  (cd project-root)
   	(bury-buffer))
-		
+
 (defun switch-expectations-repl (project-root project-name)
 	(message "Starting expectations repl...")
 	(remove-hook 'nrepl-connected-hook (first nrepl-connected-hook ))
@@ -432,8 +435,8 @@
 	(let ((project-env (format "%s/project.el" project-root)))
 		(when (file-exists-p project-env)
 			(load-file project-env))))
-			
-				
+
+
 (defun switch-project (project-root)
 	(interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
 	(let ((project-name (file-name-nondirectory (directory-file-name project-root))))
@@ -651,16 +654,16 @@
   (switch-to-buffer-other-window "*grep*"))
 
 (defun find-buffer (buffer)
-  (first 
+  (first
 	  (find-buffers buffer)))
 
 (defun find-buffers (buffer)
 	(filter (lambda (b) (string-match buffer b)) (live-list-buffer-names)))
-		  
+
 (defun filter (condp lst)
       (delq nil
             (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
-			
+
 (global-set-key (kbd "C-c g p") 'grep-in-project)
 (global-set-key (kbd "C-c g i") 'grep-in)
 (global-set-key (kbd "C-c g s p") 'grep-string-in-project)
