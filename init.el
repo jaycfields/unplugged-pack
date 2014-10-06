@@ -385,7 +385,6 @@
 		(when (file-exists-p project-env)
 			(load-file project-env))))
 
-
 (defun switch-project (project-root)
 	(interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
 	(let ((project-name (file-name-nondirectory (directory-file-name project-root))))
@@ -400,14 +399,6 @@
 			(switch-repl project-root project-name (format "*nrepl-server %s*" project-name) (format "*nrepl-server %s*" project-name)))))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
-
-(defun start-server ()
-  (interactive)
-  (load-current-buffer-to-all-nrepls)
-  (cider-interactive-eval (nrepl-last-expression))
-  (console-layout))
-
-(global-set-key (kbd "C-c C-x C-e") 'start-server)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; layout shortcuts ;;;
@@ -455,16 +446,6 @@
 
 (global-set-key (kbd "C-c w l l") 'linux-layout)
 
-(defun move-buffer-to-other-window ()
-  (interactive)
-  (let* ((w1 (get-buffer-window (current-buffer)))
-         (w2 (next-window)))
-    (set-window-buffer w2 (current-buffer))
-    (set-window-start w2 (window-start w1)))
-  (previous-buffer))
-
-(global-set-key (kbd "C-c w .") 'move-buffer-to-other-window)
-
 (defun visible-window (wlist)
   (if (equal 1 (length wlist))
       nil
@@ -476,6 +457,24 @@
   (when l
     (select-window (get-buffer-window (first l)))
     (switch-to-buffer (second l))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; buffer manipulation ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun move-buffer-to-other-window ()
+  (interactive)
+  (let* ((w1 (get-buffer-window (current-buffer)))
+         (w2 (next-window)))
+    (set-window-buffer w2 (current-buffer))
+    (set-window-start w2 (window-start w1)))
+  (previous-buffer))
+
+(global-set-key (kbd "C-c w .") 'move-buffer-to-other-window)
+
+(defun kill-all-buffers ()
+  (interactive)
+  (mapc 'kill-buffer (buffer-list)))
 
 (defun toggle-repl-buffers ()
   (interactive)
@@ -559,8 +558,6 @@
 ;;; grep'ing in a project ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq-default last-run-grep nil)
-
 (defun grep-string-in (s project-root)
   (interactive (list (read-string "string: ")
                      (ido-read-directory-name
@@ -568,7 +565,6 @@
                       (locate-dominating-file default-directory "project.clj"))))
   (message (concat s project-root))
   (let* ((cmd (concat "grep -nH -e \"" s  "\" -R --exclude-dir=\"target\" --exclude-dir=\".git\" " project-root)))
-    (setq last-run-grep cmd)
     (grep cmd)))
 
 (defun grep-string-in-project (s)
@@ -593,18 +589,8 @@
         (grep-in project-root)
       (message (concat "no project.clj found at or below " (buffer-file-name))))))
 
-(defun rerun-last-grep ()
-  (interactive)
-  (if last-run-grep
-      (grep last-run-grep)))
-
-(defun switch-to-grep ()
-  (interactive)
-  (switch-to-buffer-other-window "*grep*"))
-
 (defun find-buffer (buffer)
-  (first
-	  (find-buffers buffer)))
+  (first (find-buffers buffer)))
 
 (defun find-buffers (buffer)
 	(filter (lambda (b) (string-match buffer b)) (live-list-buffer-names)))
@@ -617,5 +603,3 @@
 (global-set-key (kbd "C-c g i") 'grep-in)
 (global-set-key (kbd "C-c g s p") 'grep-string-in-project)
 (global-set-key (kbd "C-c g s i") 'grep-string-in)
-(global-set-key (kbd "C-c M-g") 'rerun-last-grep)
-(global-set-key (kbd "C-c s g") 'switch-to-grep)
