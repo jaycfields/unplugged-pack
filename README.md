@@ -20,4 +20,4 @@ This assumes you don't have emacs-live set up at all. Adjust to taste.
     git clone https://github.com/alpaker/Fill-Column-Indicator.git
     mkdir -p ~/.lein
     mv ~/.lein/profiles.clj ~/.lein/profiles.clj.bak
-    echo "{:user {:plugins [[cider/cider-nrepl \"0.7.0\"]]}}" > ~/.lein/profiles.clj
+    echo "{:user {:plugins [[cider/cider-nrepl \"0.7.0\"] [lein-exec \"0.3.4\"]]}}" > ~/.lein/profiles.clj
