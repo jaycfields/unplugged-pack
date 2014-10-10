@@ -8,15 +8,21 @@
 (require 'clojure.edn)
 (use 'jry)
 
+(def url-suffix ":8500/history/BeefaloNrepl?start=14%20days%20ago&end=1%20minute%20ago&limit=200")
+
 (defn latest-port [result {:keys [appname hostname timestamp message]}]
   (if (some-> result (get-in [appname :timestamp]) (> timestamp))
     result
     (assoc result appname {:host hostname :port message :timestamp timestamp})))
 
+(defn monitoring-data [host]
+  (-> (str host url-suffix)
+      slurp
+      (clojure.data.json/read-json)))
+
 (defn monitoring-repl-data []
-  (-> "http://monitoring3:8500/history/BeefaloNrepl?start=14%20days%20ago&end=1%20minute%20ago&limit=100"
-      (slurp)
-      (clojure.data.json/read-json)
+  (-> (concat (monitoring-data "http://monitoring3")
+              (monitoring-data "http://monitoring4"))
       (->> (reduce latest-port {}))
       (update-vals dissoc :timestamp)))
 
