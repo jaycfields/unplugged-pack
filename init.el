@@ -14,11 +14,14 @@
 
 (setq cider-repl-pop-to-buffer-on-connect nil) ;;; don't send me to the repl on connect
 (add-hook 'nrepl-connected-hook 'reset-nrepl-connection-to-default) ;;; always default to first connection
-(add-hook 'nrepl-connected-hook 'rename-expectation-buffers-connection) ;;; always default to first connection
+(add-hook 'nrepl-connected-hook 'rename-repl-buffers-connection) ;;; always default to first connection
 (add-hook 'clojure-mode-hook 'cider-mode)
 
-
 (setq-default fill-column 90) ;;; I like my right margin at 90
+(setq default-nrepl-server "*default nrepl-server*")
+(setq default-nrepl-connection "*default nrepl-connection*")
+(setq expectations-nrepl-server "*expectations nrepl-server*")
+(setq expectations-nrepl-connection "*expectations nrepl-connection*")
 
 ;; Develop in unplugged-pack snippets dir
 ;; use snippets from emacs-live
@@ -32,17 +35,20 @@
   (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
 
 (defun reset-nrepl-connection-to-default ()
-  (let ((connection "*nrepl-connection localhost*"))
-    (if (get-buffer connection)
-        (nrepl-make-repl-connection-default (get-buffer connection))
-      (message (concat "*** PROBABLE ERROR *** " connection " could not be found")))))
+  (message "resetting nrepl-connection to %s" default-nrepl-connection)
+  (if (get-buffer default-nrepl-connection)
+      (nrepl-make-repl-connection-default (get-buffer default-nrepl-connection))
+    (message "*** PROBABLE ERROR *** buffer %s could not be found" default-nrepl-connection)))
+
+;; (nrepl-current-connection-buffer)
 
 (defun load-current-buffer-to-all-nrepls ()
   (interactive)
-    (dolist (x nrepl-connection-list)
-      (nrepl-make-repl-connection-default (get-buffer x))
-      (cider-load-current-buffer))
-    (nrepl-make-repl-connection-default "*nrepl-connection localhost*"))
+  (dolist (x nrepl-connection-list)
+    (message "Loading to conn %s" x)
+    (nrepl-make-repl-connection-default (get-buffer x))
+    (cider-load-current-buffer))
+  (reset-nrepl-connection-to-default))
 
 (define-key cider-mode-map (kbd "C-c C-k") 'load-current-buffer-to-all-nrepls)
 
@@ -216,8 +222,8 @@
 
 (defun run-expectations-for-file (&optional prefix)
   (interactive "P")
-  (when (get-buffer "*nrepl-connection localhost*<2>")
-    (nrepl-make-repl-connection-default (get-buffer "*nrepl-connection localhost*<2>")))
+  (when (get-buffer expectations-nrepl-connection)
+    (nrepl-make-repl-connection-default (get-buffer expectations-nrepl-connection)))
   (if expectations-mode
       (if prefix
           (run-isolated-expectation)
@@ -296,23 +302,38 @@
 (global-set-key (kbd "C-c x") 'toggle-expectations-and-src)
 
 
-(defun rename-buffers-on-connected ()
-	(nrepl-make-repl-connection-default (get-buffer (second nrepl-connection-list)))
-	(switch-to-buffer (get-buffer (second nrepl-connection-list)))
-	(when (get-buffer "*nrepl-server nil*")
-		(switch-to-buffer "*nrepl-server nil*")
-			(rename-buffer "*nrepl-server expectations*"))
-	(when (get-buffer "*cider-repl localhost*<2>")
-		(switch-to-buffer "*cider-repl localhost*<2>")
-			(rename-buffer "*cider-repl expectations*")))
+(defun rename-buffers-on-connected (conn-name server-name)
+  (message "renaming %s -> %s, %s -> %s"
+           nrepl-server-buffer server-name nrepl-connection-buffer conn-name)
+  (switch-to-buffer nrepl-connection-buffer)
+  (rename-buffer conn-name)
+  (switch-to-buffer nrepl-server-buffer)
+  (rename-buffer server-name)
+  (clojure-mode)
+  (make-directory "~/tmp/emacs/" t)
+  (let ((fname (concat "~/tmp/emacs/" server-name)))
+    (when (file-exists-p fname)
+      (delete-file fname))
+    (write-file fname))
+  (bury-buffer))
 
-(defun rename-expectation-buffers-connection ()
-	(when (eq 2 (length nrepl-connection-list))
-		(if (not cider-repl-pop-to-buffer-on-connect)
-			(save-window-excursion (rename-buffers-on-connected))
-	  		(rename-buffers-on-connected))
-		(message "expectation repl connected"))
-	(reset-nrepl-connection-to-default))
+(defun rename-repl-buffers-connection ()
+  ;; (message "nrepl-session %s" nrepl-session)
+  ;; (message "nrepl-connection-buffer %s" nrepl-connection-buffer)
+  ;; (message "nrepl-server-buffer %s" nrepl-server-buffer)
+  ;; (message "connection-list length: %s" (length nrepl-connection-list))
+  ;; (message "connection-list %s" nrepl-connection-list)
+  ;; (message "buffer list %s" (buffer-list))
+  ;; (message "current repl buffer %s" (cider-current-repl-buffer))
+  (when (eq 0 (length nrepl-connection-list))
+    (save-window-excursion
+      (rename-buffers-on-connected expectations-nrepl-connection expectations-nrepl-server))
+    (message "default repl connected"))
+  (when (eq 1 (length nrepl-connection-list))
+    (save-window-excursion
+      (rename-buffers-on-connected default-nrepl-connection default-nrepl-server))
+    (message "expectation repl connected"))
+  (reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; java helper fns ;;;
@@ -358,25 +379,14 @@
 		(switch-to-buffer buffer)
 			(set-buffer-modified-p nil)))
 
-(defun switch-repl (project-root project-name server buffer)
+(defun switch-repl (project-root)
   (cd project-root)
-  (cider-jack-in)
-  (switch-to-buffer server)
-  (rename-buffer buffer)
-  (clojure-mode)
-  (require 'cider-macroexpansion)
-  (make-directory (concat "~/tmp/emacs/" project-name) t)
-  (let ((fname (concat "~/tmp/emacs/" project-name (format "/%s" buffer))))
-    (when (file-exists-p fname)
-      (delete-file fname))
-    (write-file fname))
-  (cd project-root)
-  (bury-buffer))
+  (cider-jack-in))
 
-(defun switch-expectations-repl (project-root project-name)
+(defun switch-expectations-repl (project-root)
   (message "Starting expectations repl...")
-  (remove-hook 'nrepl-connected-hook (first nrepl-connected-hook ))
-  (switch-repl project-root project-name (format "*nrepl-server %s*<2>" project-name) "*nrepl-server expectations*"))
+  (remove-hook 'nrepl-connected-hook (first nrepl-connected-hook))
+  (switch-repl project-root))
 
 (defun load-project-env (project-root)
   (let ((project-env (format "%s/project.el" project-root)))
@@ -386,15 +396,15 @@
 (defun switch-project (project-root)
   (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
   (let ((project-name (file-name-nondirectory (directory-file-name project-root))))
-    (dolist (x (find-buffers "*nrepl-server"))
+    (dolist (x (find-buffers "nrepl-server*"))
       (mark-buffer-umodified x))
     (cider-force-quit)
     (load-project-env project-root)
     (when (equal current-prefix-arg nil)
       (mapc 'kill-buffer (buffer-list)))
-    (let ((fn (apply-partially #'switch-expectations-repl project-root project-name)))
+    (let ((fn (apply-partially #'switch-expectations-repl project-root)))
       (add-hook 'nrepl-connected-hook fn)
-      (switch-repl project-root project-name (format "*nrepl-server %s*" project-name) (format "*nrepl-server %s*" project-name)))))
+      (switch-repl project-root))))
 
 (global-set-key (kbd "C-c s p") 'switch-project)
 
@@ -403,6 +413,10 @@
   (setq cider-known-endpoints
         (eval (read (shell-command-to-string
                      "lein exec ~/.emacs.d/local/unplugged-pack/convert_repl_data_to_string.clj")))))
+
+(defun cider-repl-for-connection (conn-buffer)
+  (buffer-local-value 'nrepl-repl-buffer
+                      (get-buffer conn-buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; layout shortcuts ;;;
@@ -426,10 +440,10 @@
   (delete-other-windows)
   (split-window-horizontally)
   (win-switch-dispatch)
-  (switch-to-buffer (find-buffer "*nrepl-server"))
+  (switch-to-buffer default-nrepl-server)
   (split-window-vertically)
   (win-switch-dispatch)
-  (switch-to-buffer "*cider-repl localhost*")
+  (switch-to-buffer (cider-current-repl-buffer))
   (win-switch-dispatch))
 
 (global-set-key (kbd "C-c w l c") 'console-layout)
@@ -441,10 +455,10 @@
   (split-window-horizontally)
   (win-switch-dispatch)
   (win-switch-dispatch)
-  (switch-to-buffer (find-buffer "*nrepl-server"))
+  (switch-to-buffer default-nrepl-server)
   (split-window-vertically)
   (win-switch-dispatch)
-  (switch-to-buffer "*cider-repl localhost*")
+  (switch-to-buffer (cider-current-repl-buffer))
   (win-switch-dispatch)
   (balance-windows))
 
@@ -482,11 +496,15 @@
 
 (defun toggle-repl-buffers ()
   (interactive)
-  (let* ((w1 (get-buffer-window (current-buffer))))
-    (toggle-window-from-list (visible-window '("*cider-repl localhost*" "*nrepl expectations*"
-                                               "*cider-repl localhost*")))
-    (toggle-window-from-list (visible-window '((find-buffer "*nrepl-server") "*nrepl-server expectations*"
-                                               (find-buffer "*nrepl-server"))))
+  (let* ((w1 (get-buffer-window (current-buffer)))
+         (default-repl (cider-repl-for-connection default-nrepl-connection))
+         (expectations-repl (cider-repl-for-connection expectations-nrepl-connection)))
+    (toggle-window-from-list (visible-window (list default-repl
+                                                   expectations-repl
+                                                   default-repl)))
+    (toggle-window-from-list (visible-window (list default-nrepl-server
+                                                   expectations-nrepl-server
+                                                   default-nrepl-server)))
     (select-window w1)))
 
 (global-set-key (kbd "C-c w t r") 'toggle-repl-buffers)
