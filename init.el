@@ -18,6 +18,7 @@
 (add-hook 'clojure-mode-hook 'cider-mode)
 
 (setq-default fill-column 90) ;;; I like my right margin at 90
+(setq-default should-download-cider-known-hosts nil)
 (setq default-nrepl-server "*default nrepl-server*")
 (setq default-nrepl-connection "*default nrepl-connection*")
 (setq expectations-nrepl-server "*expectations nrepl-server*")
@@ -410,9 +411,27 @@
 
 (defun update-repl-known-hosts ()
   (interactive)
-  (setq cider-known-endpoints
-        (eval (read (shell-command-to-string
-                     "lein exec ~/.emacs.d/local/unplugged-pack/convert_repl_data_to_string.clj")))))
+  (when (file-exists-p "/tmp/emacs/repl_data.el")
+    (setq cider-known-endpoints
+          (eval (read (with-temp-buffer
+                        (insert-file-contents "/tmp/emacs/repl_data.el")
+                        (buffer-string)))))))
+
+(defun download-cider-known-hosts ()
+  (defun download-cider-known-hosts-exit (process event)
+    (when (eq 'exit (process-status process))
+      (if (eq 0 (process-exit-status process))
+          (update-repl-known-hosts)
+        (progn
+          (message "process status: %s" (process-status process))
+          (message "process exit-code: %s" (process-exit-status process))
+          (switch-to-buffer-other-window "*Messages*")))))
+
+  (set-process-sentinel
+   (start-process
+    "update-cider-known-hosts" "*Messages*"
+    "lein" "exec" (file-truename "~/.emacs.d/local/unplugged-pack/update_cider_known_hosts.clj"))
+   'download-cider-known-hosts-exit))
 
 (defun cider-repl-for-connection (conn-buffer)
   (buffer-local-value 'nrepl-repl-buffer
@@ -626,5 +645,5 @@
 (global-set-key (kbd "C-c g s p") 'grep-string-in-project)
 (global-set-key (kbd "C-c g s i") 'grep-string-in)
 
-(if (file-exists-p "/tmp/emacs/repl_data.edn")
-    (update-repl-known-hosts))
+(when should-download-cider-known-hosts
+  (download-cider-known-hosts))
