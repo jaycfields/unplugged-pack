@@ -8,8 +8,8 @@
 (require 'clojure.edn)
 (use 'jry)
 
-(let [current-data (if (.exists (clojure.java.io/file "repl_data.edn"))
-                     (clojure.edn/read-string (slurp "repl_data.edn"))
+(let [current-data (if (.exists (clojure.java.io/file "/tmp/emacs/repl_data.edn"))
+                     (clojure.edn/read-string (slurp "/tmp/emacs/repl_data.edn"))
                      {})]
   (println
    (str "'"

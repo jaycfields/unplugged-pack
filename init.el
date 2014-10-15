@@ -625,3 +625,6 @@
 (global-set-key (kbd "C-c g i") 'grep-in)
 (global-set-key (kbd "C-c g s p") 'grep-string-in-project)
 (global-set-key (kbd "C-c g s i") 'grep-string-in)
+
+(if (file-exists-p "/tmp/emacs/repl_data.edn")
+    (update-repl-known-hosts))
