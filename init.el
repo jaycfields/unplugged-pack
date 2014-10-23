@@ -36,10 +36,12 @@
   (remove-hook (intern (concat (symbol-name x) "-mode-hook")) 'rainbow-delimiters-mode))
 
 (defun reset-nrepl-connection-to-default ()
-  (message "resetting nrepl-connection to %s" default-nrepl-connection)
-  (if (get-buffer default-nrepl-connection)
-      (nrepl-make-repl-connection-default (get-buffer default-nrepl-connection))
-    (message "*** PROBABLE ERROR *** buffer %s could not be found" default-nrepl-connection)))
+  (when (eq 2 (length nrepl-connection-list))
+    (message "resetting nrepl-connection to %s" default-nrepl-connection)
+    (if (get-buffer default-nrepl-connection)
+        (nrepl-make-repl-connection-default (get-buffer default-nrepl-connection))
+      (message "*** PROBABLE ERROR *** buffer %s could not be found" default-nrepl-connection))
+    (message "expectation repl connected")))
 
 ;; (nrepl-current-connection-buffer)
 
@@ -329,11 +331,11 @@
   (when (eq 0 (length nrepl-connection-list))
     (save-window-excursion
       (rename-buffers-on-connected expectations-nrepl-connection expectations-nrepl-server))
-    (message "default repl connected"))
+    (message "expectations repl connected"))
   (when (eq 1 (length nrepl-connection-list))
     (save-window-excursion
       (rename-buffers-on-connected default-nrepl-connection default-nrepl-server))
-    (message "expectation repl connected"))
+    (message "default repl connected"))
   (reset-nrepl-connection-to-default))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -398,7 +400,9 @@
   (interactive (list (ido-read-directory-name "Project Root: " (locate-dominating-file default-directory "project.clj"))))
   (let ((project-name (file-name-nondirectory (directory-file-name project-root))))
     (dolist (x (find-buffers "nrepl-server*"))
-      (mark-buffer-umodified x))
+      (mark-buffer-umodified x)
+      (set-process-query-on-exit-flag (get-buffer-process x) nil)
+      (kill-buffer x))
     (cider-force-quit)
     (load-project-env project-root)
     (when (equal current-prefix-arg nil)
