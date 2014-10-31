@@ -40,8 +40,7 @@
     (message "resetting nrepl-connection to %s" default-nrepl-connection)
     (if (get-buffer default-nrepl-connection)
         (nrepl-make-repl-connection-default (get-buffer default-nrepl-connection))
-      (message "*** PROBABLE ERROR *** buffer %s could not be found" default-nrepl-connection))
-    (message "expectation repl connected")))
+      (message "*** PROBABLE ERROR *** buffer %s could not be found" default-nrepl-connection))))
 
 ;; (nrepl-current-connection-buffer)
 
@@ -226,6 +225,7 @@
 (defun run-expectations-for-file (&optional prefix)
   (interactive "P")
   (when (get-buffer expectations-nrepl-connection)
+    (message "setting expectations repl for test running")
     (nrepl-make-repl-connection-default (get-buffer expectations-nrepl-connection)))
   (if expectations-mode
       (if prefix
@@ -234,8 +234,8 @@
     (run-expectations-for-source))
   (reset-nrepl-connection-to-default))
 
-(define-key clojure-mode-map (kbd "C-c C-,") 'run-expectations-for-file)
-(define-key clojure-mode-map (kbd "C-c ,") 'run-expectations-for-file)
+(define-key cider-mode-map (kbd "C-c C-,") 'run-expectations-for-file)
+(define-key cider-mode-map (kbd "C-c ,") 'run-expectations-for-file)
 (define-key expectations-mode-map (kbd "C-c C-,") 'run-expectations-for-file)
 (define-key expectations-mode-map (kbd "C-c ,") 'run-expectations-for-file)
 
